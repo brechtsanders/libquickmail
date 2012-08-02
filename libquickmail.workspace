@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="libquickmail_static.cbp" />
+		<Project filename="libquickmail_shared.cbp" />
+		<Project filename="test_libquickmail_static.cbp">
+			<Depends filename="libquickmail_static.cbp" />
+		</Project>
+		<Project filename="test_libquickmail_shared.cbp">
+			<Depends filename="libquickmail_shared.cbp" />
+		</Project>
+		<Project filename="test.cbp" active="1" />
+	</Workspace>
+</CodeBlocks_workspace_file>

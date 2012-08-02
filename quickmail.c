@@ -44,6 +44,7 @@ struct email_info_struct {
   char* mime_boundary;
   struct email_info_string_list_struct* current_attachment;
   FILE* attachment_handle;
+  FILE* debuglog;
   char dtable[64];
 };
 
@@ -120,6 +121,7 @@ DLL_EXPORT_LIBQUICKMAIL quickmail quickmail_create (const char* from, const char
   mailobj->mime_boundary = NULL;
   mailobj->current_attachment = NULL;
   mailobj->attachment_handle = NULL;
+  mailobj->debuglog = NULL;
   for (i = 0; i < 26; i++) {
     mailobj->dtable[i] = (char)('A' + i);
     mailobj->dtable[26 + i] = (char)('a' + i);
@@ -187,6 +189,11 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, c
   email_info_string_list_add(&mailobj->attachmentlist, (path ? strdup(path) : NULL));
 }
 
+DLL_EXPORT_LIBQUICKMAIL void quickmail_set_debug_log (quickmail mailobj, FILE* filehandle)
+{
+  mailobj->debuglog = filehandle;
+}
+
 DLL_EXPORT_LIBQUICKMAIL void quickmail_fsave (quickmail mailobj, FILE* filehandle)
 {
   int i;
@@ -226,7 +233,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       //generate header part
       struct email_info_string_list_struct* listentry;
       char** p = &mailobj->buf;
-      mailobj->buf = NULL;
+      //mailobj->buf = NULL;
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION);
       if (mailobj->timestamp != 0) {
         char timestamptext[26];
@@ -375,6 +382,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       mailobj->buflen -= len;
     } else {
       free(mailobj->buf);
+      mailobj->buf = NULL;
       mailobj->buflen = 0;
     }
     return len;
@@ -435,8 +443,6 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
      * on the network. Here is how the user name and password are provided: */
     //curl_easy_setopt(curl, CURLOPT_USERNAME, "user@example.net");
     //curl_easy_setopt(curl, CURLOPT_PASSWORD, "P@ssw0rd");
-    curl_easy_setopt(curl, CURLOPT_USERNAME, "sanderb");
-    curl_easy_setopt(curl, CURLOPT_PASSWORD, "L00prek");
 
     /* value for envelope reverse-path */
     if (mailobj->from && *mailobj->from)
@@ -473,7 +479,10 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     /* Since the traffic will be encrypted, it is very useful to turn on debug
      * information within libcurl to see what is happening during the transfer.
      */
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    if (mailobj->debuglog) {
+      curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+      curl_easy_setopt(curl, CURLOPT_STDERR, mailobj->debuglog);
+    }
 
     /* send the message (including headers) */
     result = curl_easy_perform(curl);

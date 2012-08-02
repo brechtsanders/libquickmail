@@ -1,0 +1,7 @@
+0.1.0
+
+2012-08-02  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* first release on SourceForge under GPL license
+	* depends on libcurl
+	* tested on Windows with MinGW and MinGW-64 compilers

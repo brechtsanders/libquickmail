@@ -211,8 +211,11 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     free(mailobj->buf);
     mailobj->buf = NULL;
     mailobj->buflen = 0;
+    free(mailobj->mime_boundary);
     mailobj->mime_boundary = (mailobj->attachmentlist ? randomize_zeros(strdup("=SEPARATOR=_0000_0000_0000_0000_0000_0000_=")) : NULL);
     mailobj->current_attachment = mailobj->attachmentlist;
+    if (mailobj->attachment_handle)
+      fclose(mailobj->attachment_handle);
     mailobj->attachment_handle = NULL;
     mailobj->current++;
   }
@@ -222,7 +225,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_HEADER) {
       //generate header part
       struct email_info_string_list_struct* listentry;
-      char **p = &mailobj->buf;
+      char** p = &mailobj->buf;
       mailobj->buf = NULL;
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION);
       if (mailobj->timestamp != 0) {

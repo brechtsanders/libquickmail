@@ -24,8 +24,10 @@ int main ()
   return 0;
 /**/
 
+  const char* errmsg;
   quickmail_set_debug_log(mailobj, stderr);
-  quickmail_send(mailobj, "10.32.1.47", 25);
+  if ((errmsg = quickmail_send(mailobj, "10.32.1.47", 25, NULL, NULL)) != NULL)
+    fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
   quickmail_destroy(mailobj);
   return 0;
 }

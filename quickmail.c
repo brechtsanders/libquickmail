@@ -394,61 +394,38 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
   return 0;
 }
 
-DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport)
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
 {
-  struct email_info_string_list_struct* listentry;
-  size_t l = strlen(smtpserver) + 14;
-  char* url = (char*)malloc(l);
-  snprintf(url, l, "smtp://%s:%u", smtpserver, smtpport);
 
   CURL *curl;
   CURLcode result = CURLE_FAILED_INIT;
-  struct curl_slist *recipients = NULL;
-
   //curl_global_init(CURL_GLOBAL_ALL);
   if ((curl = curl_easy_init()) != NULL) {
-    /* This is the URL for your mailserver. Note the use of port 587 here,
-     * instead of the normal SMTP port (25). Port 587 is commonly used for
-     * secure mail submission (see RFC4403), but you should use whatever
-     * matches your server configuration. */
+    struct curl_slist *recipients = NULL;
+    struct email_info_string_list_struct* listentry;
+    //set destination URL
+    size_t l = strlen(smtpserver) + 14;
+    char* url = (char*)malloc(l);
+    snprintf(url, l, "smtp://%s:%u", smtpserver, smtpport);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    //curl_easy_setopt(curl, CURLOPT_URL, "smtp://edustria.be");
-
-    /* In this example, we'll start with a plain text connection, and upgrade
-     * to Transport Layer Security (TLS) using the STARTTLS command. Be careful
-     * of using CURLUSESSL_TRY here, because if TLS upgrade fails, the transfer
-     * will continue anyway - see the security discussion in the libcurl
-     * tutorial for more details. */
-    //curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+    free(url);
+    //try Transport Layer Security (TLS), but continue anyway if it fails
     curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_TRY);
-
-    /* If your server doesn't have a valid certificate, then you can disable
-     * part of the Transport Layer Security protection by setting the
-     * CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST options to 0 (false).
-     *   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-     *   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-     * That is, in general, a bad idea. It is still better than sending your
-     * authentication details in plain text though.
-     * Instead, you should get the issuer certificate (or the host certificate
-     * if the certificate is self-signed) and add it to the set of certificates
-     * that are known to libcurl using CURLOPT_CAINFO and/or CURLOPT_CAPATH. See
-     * docs/SSLCERTS for more information.
-     */
-    //curl_easy_setopt(curl, CURLOPT_CAINFO, "/path/to/certificate.pem");
+    //don't fail if the TLS/SSL a certificate could not be verified
+    //alternative: add the issuer certificate (or the host certificate if
+    //the certificate is self-signed) to the set of certificates that are
+    //known to libcurl using CURLOPT_CAINFO and/or CURLOPT_CAPATH
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-
-    /* A common reason for requiring transport security is to protect
-     * authentication details (user names and passwords) from being "snooped"
-     * on the network. Here is how the user name and password are provided: */
-    //curl_easy_setopt(curl, CURLOPT_USERNAME, "user@example.net");
-    //curl_easy_setopt(curl, CURLOPT_PASSWORD, "P@ssw0rd");
-
-    /* value for envelope reverse-path */
+    //set authentication credentials if provided
+    if (username && *username)
+      curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+    if (password)
+      curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+    //set from value for envelope reverse-path
     if (mailobj->from && *mailobj->from)
       curl_easy_setopt(curl, CURLOPT_MAIL_FROM, mailobj->from);
-    /* Add recipients, these correspond to the To: and Cc: addressees in
-     * the header pluss any Bcc recipients. */
+    //set recipients
     listentry = mailobj->to;
     while (listentry) {
       if (listentry->data && *listentry->data)
@@ -468,30 +445,19 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
       listentry = listentry->next;
     }
     curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
-
-    /* In this case, we're using a callback function to specify the data. You
-     * could just use the CURLOPT_READDATA option to specify a FILE pointer to
-     * read from.
-     */
+    //set callback function for getting message body
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, quickmail_get_data);
     curl_easy_setopt(curl, CURLOPT_READDATA, mailobj);
-
-    /* Since the traffic will be encrypted, it is very useful to turn on debug
-     * information within libcurl to see what is happening during the transfer.
-     */
+    //enable debugging if requested
     if (mailobj->debuglog) {
       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
       curl_easy_setopt(curl, CURLOPT_STDERR, mailobj->debuglog);
     }
-
-    /* send the message (including headers) */
+    //send the message
     result = curl_easy_perform(curl);
-
-    /* free the list of recipients and clean up */
+    //free the list of recipients and clean up
     curl_slist_free_all(recipients);
     curl_easy_cleanup(curl);
   }
-
-  free(url);
   return (result == CURLE_OK ? NULL : curl_easy_strerror(result));
 }

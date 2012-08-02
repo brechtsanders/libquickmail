@@ -33,7 +33,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, c
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_debug_log (quickmail mailobj, FILE* filehandle);
 DLL_EXPORT_LIBQUICKMAIL void quickmail_fsave (quickmail mailobj, FILE* filehandle);
 DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* buffer, size_t size, size_t nmemb, void* mailobj);
-DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport);
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password);
 
 #ifdef __cplusplus
 }

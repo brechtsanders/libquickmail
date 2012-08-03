@@ -1,8 +1,10 @@
 0.1.1
 
-2012-08-02  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+2012-08-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* tested on Debian Linux
+	* added function quickmail_get_version() to get version number
+	* added Doxygen style comments to quickmail.h
 
 0.1.0
 

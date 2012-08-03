@@ -103,6 +103,11 @@ char* str_append (char** data, const char* newdata)
 
 ////////////////////////////////////////////////////////////////////////
 
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_version ()
+{
+  return VERSION_STRINGIZE(LIBQUICKMAIL_VERSION_MAJOR, LIBQUICKMAIL_VERSION_MINOR, LIBQUICKMAIL_VERSION_MICRO);
+}
+
 DLL_EXPORT_LIBQUICKMAIL quickmail quickmail_create (const char* from, const char* subject)
 {
   int i;

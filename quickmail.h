@@ -109,9 +109,9 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_fsave (quickmail mailobj, FILE* filehandl
 /*!
   \param  buffer      buffer to copy data to (bust be able to hold size * nmemb bytes)
   \param  size        record size
-  \param  nmemb       number of records to copy to buffer
+  \param  nmemb       number of records to copy to \p buffer
   \param  mailobj     quickmail object
-  \return number of bytes copied to buffer or 0 if at end
+  \return number of bytes copied to \p buffer or 0 if at end
 */
 DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* buffer, size_t size, size_t nmemb, void* mailobj);
 

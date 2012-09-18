@@ -319,7 +319,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary);
             mailobj->buf = str_append(&mailobj->buf, NEWLINE "Content-Type: application/octet-stream; Name=\"");
             mailobj->buf = str_append(&mailobj->buf, basename);
-            mailobj->buf = str_append(&mailobj->buf, "\"" NEWLINE "Content-Description: The fixed length records" NEWLINE "Content-Transfer-Encoding: base64" NEWLINE NEWLINE);
+            mailobj->buf = str_append(&mailobj->buf, "\"" NEWLINE "Content-Transfer-Encoding: base64" NEWLINE NEWLINE);
             mailobj->buflen = strlen(mailobj->buf);
           }
         } else {

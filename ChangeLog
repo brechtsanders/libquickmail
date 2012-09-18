@@ -1,3 +1,9 @@
+0.1.2
+
+2012-09-18  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* removed header "Content-Description: The fixed length records"
+
 0.1.1
 
 2012-08-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>

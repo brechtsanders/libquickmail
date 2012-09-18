@@ -1,10 +1,10 @@
 #include "quickmail.h"
 #include <stdio.h>
 
-#define FROM    "brecht.sanders@alpro.com"
-#define TO      "brecht.sanders@alpro.com"
-//#define TO      "brecht@edustria.be"
-//#define CC      "brecht.sanders@alpro.com"
+#define FROM        "user@domain.com"
+#define TO          "user@domain.com"
+#define SMTPSERVER  "smtp.domain.com"
+#define SMTPPORT    25
 
 
 int main ()
@@ -26,7 +26,7 @@ int main ()
 
   const char* errmsg;
   quickmail_set_debug_log(mailobj, stderr);
-  if ((errmsg = quickmail_send(mailobj, "10.32.1.47", 25, NULL, NULL)) != NULL)
+  if ((errmsg = quickmail_send(mailobj, SMTPSERVER, SMTPPORT, NULL, NULL)) != NULL)
     fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
   quickmail_destroy(mailobj);
   return 0;

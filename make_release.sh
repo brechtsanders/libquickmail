@@ -7,6 +7,7 @@ FILELIST='*.c *.h *.am *.in README AUTHORS COPYING NEWS ChangeLog INSTALL INSTAL
 
 # create tarball
 echo Creating tarball: $TARBALL
+rm -rf $BASENAME &> /dev/null
 mkdir $BASENAME
 cp -rf $FILELIST $BASENAME/
 rm $TARBALL &> /dev/null

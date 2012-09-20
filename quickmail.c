@@ -10,7 +10,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 1
+#define LIBQUICKMAIL_VERSION_MICRO 3
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -206,7 +206,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_fsave (quickmail mailobj, FILE* filehandl
   char buf[80];
   while ((n = quickmail_get_data(buf, sizeof(buf), 1, mailobj)) > 0) {
     for (i = 0; i < n; i++)
-      printf("%c", buf[i]);
+      fprintf(filehandle, "%c", buf[i]);
   }
 }
 
@@ -277,7 +277,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       if (mailobj->attachmentlist) {
         str_append(p, NEWLINE "MIME-Version: 1.0" NEWLINE "Content-Type: multipart/mixed; boundary=\"");
         str_append(p, mailobj->mime_boundary);
-        str_append(p, NEWLINE NEWLINE "--");
+        str_append(p, "\"" NEWLINE NEWLINE "--");
         str_append(p, mailobj->mime_boundary);
         str_append(p, NEWLINE "Content-Type: text/plain");
       }
@@ -364,13 +364,15 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     }
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_END) {
       mailobj->buf = NULL;
+      mailobj->buflen = 0;
       if (mailobj->attachmentlist) {
         mailobj->buf = str_append(&mailobj->buf, NEWLINE "--");
         mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary);
         mailobj->buf = str_append(&mailobj->buf, "--" NEWLINE);
+        mailobj->buflen = strlen(mailobj->buf);
       }
       //mailobj->buf = str_append(&mailobj->buf, NEWLINE "." NEWLINE);
-      mailobj->buflen = strlen(mailobj->buf);
+      //mailobj->buflen = strlen(mailobj->buf);
       mailobj->current++;
     }
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_DONE) {

@@ -1,3 +1,11 @@
+0.1.3
+
+2012-09-20  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed missing ending quote in boundary header (reported by Mazin SW)
+	* fixed crash whith no attachments (reported by Mazin SW)
+	* fixed issue generating to stdio instead of file (reported by Mazin SW)
+
 0.1.2
 
 2012-09-18  Brecht Sanders  <brechtsanders@users.sourceforge.net>

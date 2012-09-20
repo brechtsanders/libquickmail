@@ -3,6 +3,7 @@
 
 #define FROM        "user@domain.com"
 #define TO          "user@domain.com"
+//#define CC          "otheruser@domain.com"
 #define SMTPSERVER  "smtp.domain.com"
 #define SMTPPORT    25
 

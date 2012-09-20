@@ -10,7 +10,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 3
+#define LIBQUICKMAIL_VERSION_MICRO 4
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -241,8 +241,8 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       //mailobj->buf = NULL;
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION);
       if (mailobj->timestamp != 0) {
-        char timestamptext[26];
-        if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S", gmtime(&mailobj->timestamp))) {
+        char timestamptext[32];
+        if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S +0000", gmtime(&mailobj->timestamp))) {
           str_append(p, NEWLINE "Date: ");
           str_append(p, timestamptext);
         }

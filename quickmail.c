@@ -6,11 +6,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#ifndef NOCURL
 #include <curl/curl.h>
+#else
+#include <ctype.h>
+#ifdef __WIN32__
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#endif
+#endif
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 4
+#define LIBQUICKMAIL_VERSION_MICRO 5
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -305,7 +314,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             while (basename != mailobj->current_attachment->data) {
               basename--;
               if (*basename == '/'
-#ifdef _WIN32
+#ifdef __WIN32__
                   || *basename == '\\' || *basename == ':'
 #endif
               ) {
@@ -401,9 +410,92 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
   return 0;
 }
 
+#ifdef NOCURL
+#define READ_BUFFER_CHUNK_SIZE 128
+#define WRITE_BUFFER_CHUNK_SIZE 128
+
+int sock_send (SOCKET sock, const char* buf, int len)
+{
+  if (sock == 0 || !buf)
+    return 0;
+  if (len < 0)
+    len = strlen(buf);
+  int total_sent = 0;
+  int l;
+  while (len > 0 && (l = send(sock, buf, len, 0)) < len) {
+    if (l == SOCKET_ERROR || l > len)
+      return total_sent;
+    total_sent += l;
+    buf += l;
+    len -= l;
+  }
+  return total_sent + l;
+}
+
+int read_ready (SOCKET sock, int timeoutseconds)
+{
+  if (sock == 0)
+    return 0;
+  //make a set with only this socket
+  fd_set rfds;
+  FD_ZERO(&rfds);
+  FD_SET(sock, &rfds);
+  //make a timeval with the supplied timeout
+  struct timeval tv;
+  tv.tv_sec = timeoutseconds;
+  tv.tv_usec = 0;
+  //check the socket
+  return (select(1, &rfds, NULL, NULL, &tv) > 0);
+}
+
+char* sock_read (SOCKET sock)
+{
+  char* buf = NULL;
+  do {
+    free(buf);
+    int size = READ_BUFFER_CHUNK_SIZE;
+    buf = (char*)malloc(size);
+    char* p = buf;
+    while (recv(sock, p, 1, 0) == 1 && *p != '\r' && *p != '\n') {
+      p++;
+      if (p - buf >= size) {
+        int len = p - buf;
+        char* newbuf = (char*)malloc(size + READ_BUFFER_CHUNK_SIZE);
+        memcpy(newbuf, buf, len);
+        free(buf);
+        buf = newbuf;
+        p = buf + len;
+        size += READ_BUFFER_CHUNK_SIZE;
+      }
+    }
+    while (read_ready(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
+      ;
+    *p = 0;
+  } while (!isdigit(buf[0]) || !isdigit(buf[1]) || !isdigit(buf[2]) || buf[3] != ' ');
+  return buf;
+}
+
+int get_code (SOCKET sock, char** errmsg)
+{
+  char* buf = sock_read (sock);
+  if (buf[3] != ' ')
+    return 0;
+  //get code
+  buf[3] = 0;
+  int code = atoi(buf);
+  //get error message (if needed)
+  if (!errmsg && code >= 400)
+    *errmsg = strdup(buf + 4);
+  //clean up and return
+  free(buf);
+  return code;
+}
+#endif
+
 DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
 {
-
+#ifndef NOCURL
+  //libcurl based sending
   CURL *curl;
   CURLcode result = CURLE_FAILED_INIT;
   //curl_global_init(CURL_GLOBAL_ALL);
@@ -467,4 +559,104 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     curl_easy_cleanup(curl);
   }
   return (result == CURLE_OK ? NULL : curl_easy_strerror(result));
+#else
+  //minimal implementation without libcurl
+  struct in_addr ipv4addr;
+  SOCKET sock;
+  char* errmsg = NULL;
+  struct email_info_string_list_struct* listentry;
+  int i;
+  //determine IPv4 address of SMTP server
+  ipv4addr.s_addr = inet_addr(smtpserver);
+  if (ipv4addr.s_addr == INADDR_NONE) {
+    struct hostent* addr;
+    if ((addr = gethostbyname(smtpserver)) != NULL && (addr->h_addrtype == AF_INET && addr->h_length >= 1 && ((struct in_addr*)addr->h_addr)->s_addr != 0))
+      memcpy(&ipv4addr, addr->h_addr, sizeof(ipv4addr));
+  }
+  if (ipv4addr.s_addr == INADDR_NONE)
+    return "Unable to resolve SMTP server host name";
+  //create the socket
+  sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (sock == INVALID_SOCKET)
+    return "Error creating socket for SMTP connection";
+
+  //connect to the site
+  struct sockaddr_in remote_sock_addr;
+  remote_sock_addr.sin_family = AF_INET;
+  remote_sock_addr.sin_port = htons(smtpport);
+  remote_sock_addr.sin_addr.s_addr = ipv4addr.s_addr;
+  if (connect(sock, (struct sockaddr*)&remote_sock_addr, sizeof(remote_sock_addr)))
+    return strdup("Error connecting to SMTP server");
+  //set linger option
+  static const struct linger linger_option = {-1, 2};   //linger 2 seconds when disconnecting
+  setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*)&linger_option, sizeof(linger_option));
+  //log into SMTP server
+  char local_hostname[64];
+  get_code(sock, &errmsg);
+  gethostname(local_hostname, sizeof(local_hostname));
+  sock_send(sock, "HELO ", 5);
+  sock_send(sock, local_hostname, -1);
+  sock_send(sock, "\r\n", 2);
+  get_code(sock, &errmsg);
+  //authenticate if necessary
+  /////TO DO
+  //send originator e-mail address
+  sock_send(sock, "MAIL FROM:", 10);
+  sock_send(sock, mailobj->from, -1);
+  sock_send(sock, "\r\n", 2);
+  get_code(sock, &errmsg);
+  //send recipient e-mail addresses
+  listentry = mailobj->to;
+  while (listentry) {
+    if (listentry->data && *listentry->data) {
+      sock_send(sock, "RCPT TO:", 8);
+      sock_send(sock, listentry->data, -1);
+      sock_send(sock, "\r\n", 2);
+      get_code(sock, &errmsg);
+    }
+    listentry = listentry->next;
+  }
+  listentry = mailobj->cc;
+  while (listentry) {
+    if (listentry->data && *listentry->data) {
+      sock_send(sock, "RCPT TO:", 8);
+      sock_send(sock, listentry->data, -1);
+      sock_send(sock, "\r\n", 2);
+      get_code(sock, &errmsg);
+    }
+    listentry = listentry->next;
+  }
+  listentry = mailobj->bcc;
+  while (listentry) {
+    if (listentry->data && *listentry->data) {
+      sock_send(sock, "RCPT TO:", 8);
+      sock_send(sock, listentry->data, -1);
+      sock_send(sock, "\r\n", 2);
+      get_code(sock, &errmsg);
+    }
+    listentry = listentry->next;
+  }
+  //prepare to send mail body
+  sock_send(sock, "DATA\r\n", 6);
+  i = get_code(sock, &errmsg);
+  //send mail body data
+  size_t n;
+  char buf[WRITE_BUFFER_CHUNK_SIZE];
+  while ((n = quickmail_get_data(buf, sizeof(buf), 1, mailobj)) > 0) {
+    sock_send(sock, buf, n);
+  }
+  //send end of data
+  sock_send(sock, "\r\n.\r\n", 5);
+  //log out
+  sock_send(sock, "QUIT\r\n", 6);
+  get_code(sock, &errmsg);
+
+  //close socket
+#ifndef __WIN32__
+  shutdown(sock, 2);
+#else
+  closesocket(sock);
+#endif
+  return errmsg;
+#endif
 }

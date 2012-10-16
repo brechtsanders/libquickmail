@@ -6,10 +6,22 @@
 //#define CC          "otheruser@domain.com"
 #define SMTPSERVER  "smtp.domain.com"
 #define SMTPPORT    25
+#define SMTPUSER    NULL
+#define SMTPPASS    NULL
 
+#if defined(NOCURL) && defined(__WIN32__)
+#include <winsock2.h>
+#endif
 
 int main ()
 {
+#if defined(NOCURL) && defined(__WIN32__)
+  static WSADATA wsaData;
+  int wsaerr = WSAStartup(MAKEWORD(1, 0), &wsaData);
+  if (wsaerr)
+    exit(1);
+  atexit((void(*)())WSACleanup);
+#endif
   quickmail mailobj = quickmail_create(FROM, "libquickmail test e-mail");
   quickmail_add_to(mailobj, TO);
 #ifdef CC
@@ -18,8 +30,7 @@ int main ()
   quickmail_set_body(mailobj, "This is a test e-mail.\nThis mail was sent using libquickmail.");
   quickmail_add_attachment_file(mailobj, "test_quickmail.c");
   quickmail_add_attachment_file(mailobj, "test_quickmail.cbp");
-  //quickmail_add_attachment_file(mailobj, "D:\\Download\\npp.6.1.3.bin.zip");
-/**/
+/*/
   quickmail_fsave(mailobj, stdout);
   quickmail_destroy(mailobj);
   return 0;
@@ -27,7 +38,7 @@ int main ()
 
   const char* errmsg;
   quickmail_set_debug_log(mailobj, stderr);
-  if ((errmsg = quickmail_send(mailobj, SMTPSERVER, SMTPPORT, NULL, NULL)) != NULL)
+  if ((errmsg = quickmail_send(mailobj, SMTPSERVER, SMTPPORT, SMTPUSER, SMTPPASS)) != NULL)
     fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
   quickmail_destroy(mailobj);
   return 0;

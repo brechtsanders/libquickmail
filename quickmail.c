@@ -414,7 +414,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
 #define READ_BUFFER_CHUNK_SIZE 128
 #define WRITE_BUFFER_CHUNK_SIZE 128
 
-int sock_send (SOCKET sock, const char* buf, int len)
+int socket_send (SOCKET sock, const char* buf, int len)
 {
   if (sock == 0 || !buf)
     return 0;
@@ -432,7 +432,7 @@ int sock_send (SOCKET sock, const char* buf, int len)
   return total_sent + l;
 }
 
-int read_ready (SOCKET sock, int timeoutseconds)
+int socket_data_waiting (SOCKET sock, int timeoutseconds)
 {
   if (sock == 0)
     return 0;
@@ -448,7 +448,7 @@ int read_ready (SOCKET sock, int timeoutseconds)
   return (select(1, &rfds, NULL, NULL, &tv) > 0);
 }
 
-char* sock_read (SOCKET sock)
+char* socket_receive (SOCKET sock)
 {
   char* buf = NULL;
   do {
@@ -468,16 +468,16 @@ char* sock_read (SOCKET sock)
         size += READ_BUFFER_CHUNK_SIZE;
       }
     }
-    while (read_ready(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
+    while (socket_data_waiting(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
       ;
     *p = 0;
   } while (!isdigit(buf[0]) || !isdigit(buf[1]) || !isdigit(buf[2]) || buf[3] != ' ');
   return buf;
 }
 
-int get_code (SOCKET sock, char** errmsg)
+int socket_get_smtp_code (SOCKET sock, char** errmsg)
 {
-  char* buf = sock_read (sock);
+  char* buf = socket_receive(sock);
   if (buf[3] != ' ')
     return 0;
   //get code
@@ -592,64 +592,64 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*)&linger_option, sizeof(linger_option));
   //log into SMTP server
   char local_hostname[64];
-  get_code(sock, &errmsg);
+  socket_get_smtp_code(sock, &errmsg);
   gethostname(local_hostname, sizeof(local_hostname));
-  sock_send(sock, "HELO ", 5);
-  sock_send(sock, local_hostname, -1);
-  sock_send(sock, "\r\n", 2);
-  get_code(sock, &errmsg);
+  socket_send(sock, "HELO ", 5);
+  socket_send(sock, local_hostname, -1);
+  socket_send(sock, "\r\n", 2);
+  socket_get_smtp_code(sock, &errmsg);
   //authenticate if necessary
   /////TO DO
   //send originator e-mail address
-  sock_send(sock, "MAIL FROM:", 10);
-  sock_send(sock, mailobj->from, -1);
-  sock_send(sock, "\r\n", 2);
-  get_code(sock, &errmsg);
+  socket_send(sock, "MAIL FROM:", 10);
+  socket_send(sock, mailobj->from, -1);
+  socket_send(sock, "\r\n", 2);
+  socket_get_smtp_code(sock, &errmsg);
   //send recipient e-mail addresses
   listentry = mailobj->to;
   while (listentry) {
     if (listentry->data && *listentry->data) {
-      sock_send(sock, "RCPT TO:", 8);
-      sock_send(sock, listentry->data, -1);
-      sock_send(sock, "\r\n", 2);
-      get_code(sock, &errmsg);
+      socket_send(sock, "RCPT TO:", 8);
+      socket_send(sock, listentry->data, -1);
+      socket_send(sock, "\r\n", 2);
+      socket_get_smtp_code(sock, &errmsg);
     }
     listentry = listentry->next;
   }
   listentry = mailobj->cc;
   while (listentry) {
     if (listentry->data && *listentry->data) {
-      sock_send(sock, "RCPT TO:", 8);
-      sock_send(sock, listentry->data, -1);
-      sock_send(sock, "\r\n", 2);
-      get_code(sock, &errmsg);
+      socket_send(sock, "RCPT TO:", 8);
+      socket_send(sock, listentry->data, -1);
+      socket_send(sock, "\r\n", 2);
+      socket_get_smtp_code(sock, &errmsg);
     }
     listentry = listentry->next;
   }
   listentry = mailobj->bcc;
   while (listentry) {
     if (listentry->data && *listentry->data) {
-      sock_send(sock, "RCPT TO:", 8);
-      sock_send(sock, listentry->data, -1);
-      sock_send(sock, "\r\n", 2);
-      get_code(sock, &errmsg);
+      socket_send(sock, "RCPT TO:", 8);
+      socket_send(sock, listentry->data, -1);
+      socket_send(sock, "\r\n", 2);
+      socket_get_smtp_code(sock, &errmsg);
     }
     listentry = listentry->next;
   }
   //prepare to send mail body
-  sock_send(sock, "DATA\r\n", 6);
-  i = get_code(sock, &errmsg);
+  socket_send(sock, "DATA\r\n", 6);
+  i = socket_get_smtp_code(sock, &errmsg);
   //send mail body data
   size_t n;
   char buf[WRITE_BUFFER_CHUNK_SIZE];
   while ((n = quickmail_get_data(buf, sizeof(buf), 1, mailobj)) > 0) {
-    sock_send(sock, buf, n);
+    socket_send(sock, buf, n);
   }
   //send end of data
-  sock_send(sock, "\r\n.\r\n", 5);
+  socket_send(sock, "\r\n.\r\n", 5);
   //log out
-  sock_send(sock, "QUIT\r\n", 6);
-  get_code(sock, &errmsg);
+  socket_send(sock, "QUIT\r\n", 6);
+  socket_get_smtp_code(sock, &errmsg);
 
   //close socket
 #ifndef __WIN32__

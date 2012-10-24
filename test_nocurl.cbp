@@ -96,6 +96,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="quickmail.h" />
+		<Unit filename="smtpsocket.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="smtpsocket.h" />
 		<Unit filename="test_quickmail.c">
 			<Option compilerVar="CC" />
 		</Unit>

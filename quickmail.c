@@ -9,12 +9,7 @@
 #ifndef NOCURL
 #include <curl/curl.h>
 #else
-#include <ctype.h>
-#ifdef __WIN32__
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#endif
+#include "smtpsocket.h"
 #endif
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
@@ -410,88 +405,6 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
   return 0;
 }
 
-#ifdef NOCURL
-#define READ_BUFFER_CHUNK_SIZE 128
-#define WRITE_BUFFER_CHUNK_SIZE 128
-
-int socket_send (SOCKET sock, const char* buf, int len)
-{
-  if (sock == 0 || !buf)
-    return 0;
-  if (len < 0)
-    len = strlen(buf);
-  int total_sent = 0;
-  int l;
-  while (len > 0 && (l = send(sock, buf, len, 0)) < len) {
-    if (l == SOCKET_ERROR || l > len)
-      return total_sent;
-    total_sent += l;
-    buf += l;
-    len -= l;
-  }
-  return total_sent + l;
-}
-
-int socket_data_waiting (SOCKET sock, int timeoutseconds)
-{
-  if (sock == 0)
-    return 0;
-  //make a set with only this socket
-  fd_set rfds;
-  FD_ZERO(&rfds);
-  FD_SET(sock, &rfds);
-  //make a timeval with the supplied timeout
-  struct timeval tv;
-  tv.tv_sec = timeoutseconds;
-  tv.tv_usec = 0;
-  //check the socket
-  return (select(1, &rfds, NULL, NULL, &tv) > 0);
-}
-
-char* socket_receive (SOCKET sock)
-{
-  char* buf = NULL;
-  do {
-    free(buf);
-    int size = READ_BUFFER_CHUNK_SIZE;
-    buf = (char*)malloc(size);
-    char* p = buf;
-    while (recv(sock, p, 1, 0) == 1 && *p != '\r' && *p != '\n') {
-      p++;
-      if (p - buf >= size) {
-        int len = p - buf;
-        char* newbuf = (char*)malloc(size + READ_BUFFER_CHUNK_SIZE);
-        memcpy(newbuf, buf, len);
-        free(buf);
-        buf = newbuf;
-        p = buf + len;
-        size += READ_BUFFER_CHUNK_SIZE;
-      }
-    }
-    while (socket_data_waiting(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
-      ;
-    *p = 0;
-  } while (!isdigit(buf[0]) || !isdigit(buf[1]) || !isdigit(buf[2]) || buf[3] != ' ');
-  return buf;
-}
-
-int socket_get_smtp_code (SOCKET sock, char** errmsg)
-{
-  char* buf = socket_receive(sock);
-  if (buf[3] != ' ')
-    return 0;
-  //get code
-  buf[3] = 0;
-  int code = atoi(buf);
-  //get error message (if needed)
-  if (!errmsg && code >= 400)
-    *errmsg = strdup(buf + 4);
-  //clean up and return
-  free(buf);
-  return code;
-}
-#endif
-
 DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
 {
 #ifndef NOCURL
@@ -561,35 +474,13 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   return (result == CURLE_OK ? NULL : curl_easy_strerror(result));
 #else
   //minimal implementation without libcurl
-  struct in_addr ipv4addr;
   SOCKET sock;
   char* errmsg = NULL;
   struct email_info_string_list_struct* listentry;
   int i;
-  //determine IPv4 address of SMTP server
-  ipv4addr.s_addr = inet_addr(smtpserver);
-  if (ipv4addr.s_addr == INADDR_NONE) {
-    struct hostent* addr;
-    if ((addr = gethostbyname(smtpserver)) != NULL && (addr->h_addrtype == AF_INET && addr->h_length >= 1 && ((struct in_addr*)addr->h_addr)->s_addr != 0))
-      memcpy(&ipv4addr, addr->h_addr, sizeof(ipv4addr));
-  }
-  if (ipv4addr.s_addr == INADDR_NONE)
-    return "Unable to resolve SMTP server host name";
-  //create the socket
-  sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (sock == INVALID_SOCKET)
-    return "Error creating socket for SMTP connection";
 
-  //connect to the site
-  struct sockaddr_in remote_sock_addr;
-  remote_sock_addr.sin_family = AF_INET;
-  remote_sock_addr.sin_port = htons(smtpport);
-  remote_sock_addr.sin_addr.s_addr = ipv4addr.s_addr;
-  if (connect(sock, (struct sockaddr*)&remote_sock_addr, sizeof(remote_sock_addr)))
-    return strdup("Error connecting to SMTP server");
-  //set linger option
-  static const struct linger linger_option = {-1, 2};   //linger 2 seconds when disconnecting
-  setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*)&linger_option, sizeof(linger_option));
+  //connect
+  sock = socket_open(smtpserver, smtpport, &errmsg);
   //log into SMTP server
   char local_hostname[64];
   socket_get_smtp_code(sock, &errmsg);
@@ -652,11 +543,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   socket_get_smtp_code(sock, &errmsg);
 
   //close socket
-#ifndef __WIN32__
-  shutdown(sock, 2);
-#else
-  closesocket(sock);
-#endif
+  socket_close(sock);
   return errmsg;
 #endif
 }

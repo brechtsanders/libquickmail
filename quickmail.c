@@ -477,71 +477,81 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   SOCKET sock;
   char* errmsg = NULL;
   struct email_info_string_list_struct* listentry;
-  int i;
-
-  //connect
-  sock = socket_open(smtpserver, smtpport, &errmsg);
-  //log into SMTP server
   char local_hostname[64];
-  socket_get_smtp_code(sock, &errmsg);
+  int statuscode;
+  //determine local host name
   gethostname(local_hostname, sizeof(local_hostname));
-  socket_send(sock, "HELO ", 5);
-  socket_send(sock, local_hostname, -1);
-  socket_send(sock, "\r\n", 2);
-  socket_get_smtp_code(sock, &errmsg);
-  //authenticate if necessary
-  /////TO DO
-  //send originator e-mail address
-  socket_send(sock, "MAIL FROM:", 10);
-  socket_send(sock, mailobj->from, -1);
-  socket_send(sock, "\r\n", 2);
-  socket_get_smtp_code(sock, &errmsg);
-  //send recipient e-mail addresses
-  listentry = mailobj->to;
-  while (listentry) {
-    if (listentry->data && *listentry->data) {
-      socket_send(sock, "RCPT TO:", 8);
-      socket_send(sock, listentry->data, -1);
-      socket_send(sock, "\r\n", 2);
-      socket_get_smtp_code(sock, &errmsg);
+  //connect
+  if ((sock = socket_open(smtpserver, smtpport, &errmsg)) != INVALID_SOCKET) {
+    //talk with SMTP server
+    statuscode = socket_smtp_command(sock, mailobj->debuglog, NULL);
+    if (statuscode >= 400) {
+      errmsg = "SMTP server returned an error on connection";
+    } else {
+      do {
+        statuscode = socket_smtp_command(sock, mailobj->debuglog, "HELO %s", local_hostname);
+        if (statuscode >= 400) {
+          errmsg = "SMTP HELO returned error";
+          break;
+        }
+        //authenticate if necessary
+        /////TO DO
+        //send originator e-mail address
+        statuscode = socket_smtp_command(sock, mailobj->debuglog, "MAIL FROM:<%s>", mailobj->from);
+        if (statuscode >= 400) {
+          errmsg = "SMTP server did not accept sender";
+          break;
+        }
+        //send recipient e-mail addresses
+        listentry = mailobj->to;
+        while (!errmsg && listentry) {
+          if (listentry->data && *listentry->data) {
+            if (socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data) >= 400)
+              errmsg = "SMTP server did not accept e-mail address (To)";
+          }
+          listentry = listentry->next;
+        }
+        listentry = mailobj->cc;
+        while (!errmsg && listentry) {
+          if (listentry->data && *listentry->data) {
+            if (socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data) >= 400)
+              errmsg = "SMTP server did not accept e-mail address (CC)";
+          }
+          listentry = listentry->next;
+        }
+        listentry = mailobj->bcc;
+        while (!errmsg && listentry) {
+          if (listentry->data && *listentry->data) {
+            if (socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data) >= 400)
+              errmsg = "SMTP server did not accept e-mail address (BCC)";
+          }
+          listentry = listentry->next;
+        }
+        if (errmsg)
+          break;
+        //prepare to send mail body
+        statuscode = socket_smtp_command(sock, mailobj->debuglog, "DATA");
+        if (statuscode >= 400) {
+          errmsg = "SMTP DATA returned error";
+          break;
+        }
+        //send mail body data
+        size_t n;
+        char buf[WRITE_BUFFER_CHUNK_SIZE];
+        while ((n = quickmail_get_data(buf, sizeof(buf), 1, mailobj)) > 0) {
+          socket_send(sock, buf, n);
+        }
+        //send end of data
+        statuscode = socket_smtp_command(sock, mailobj->debuglog, "\r\n.");
+        if (statuscode >= 400) {
+          errmsg = "SMTP error after sending message data";
+          break;
+        }
+      } while (0);
+      //log out
+      socket_smtp_command(sock, mailobj->debuglog, "QUIT");
     }
-    listentry = listentry->next;
   }
-  listentry = mailobj->cc;
-  while (listentry) {
-    if (listentry->data && *listentry->data) {
-      socket_send(sock, "RCPT TO:", 8);
-      socket_send(sock, listentry->data, -1);
-      socket_send(sock, "\r\n", 2);
-      socket_get_smtp_code(sock, &errmsg);
-    }
-    listentry = listentry->next;
-  }
-  listentry = mailobj->bcc;
-  while (listentry) {
-    if (listentry->data && *listentry->data) {
-      socket_send(sock, "RCPT TO:", 8);
-      socket_send(sock, listentry->data, -1);
-      socket_send(sock, "\r\n", 2);
-      socket_get_smtp_code(sock, &errmsg);
-    }
-    listentry = listentry->next;
-  }
-  //prepare to send mail body
-  socket_send(sock, "DATA\r\n", 6);
-  i = socket_get_smtp_code(sock, &errmsg);
-  //send mail body data
-  size_t n;
-  char buf[WRITE_BUFFER_CHUNK_SIZE];
-  while ((n = quickmail_get_data(buf, sizeof(buf), 1, mailobj)) > 0) {
-    socket_send(sock, buf, n);
-  }
-  //send end of data
-  socket_send(sock, "\r\n.\r\n", 5);
-  //log out
-  socket_send(sock, "QUIT\r\n", 6);
-  socket_get_smtp_code(sock, &errmsg);
-
   //close socket
   socket_close(sock);
   return errmsg;

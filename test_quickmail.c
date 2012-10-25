@@ -1,10 +1,11 @@
 #include "quickmail.h"
 #include <stdio.h>
 
-#define FROM        "user@domain.com"
+#define FROM        "me@domain.com"
 #define TO          "user@domain.com"
 //#define CC          "otheruser@domain.com"
-#define SMTPSERVER  "smtp.domain.com"
+//#define BCC         "otheruser@domain.com"
+#define SMTPSERVER  "mail.server.com"
 #define SMTPPORT    25
 #define SMTPUSER    NULL
 #define SMTPPASS    NULL
@@ -23,9 +24,14 @@ int main ()
   atexit((void(*)())WSACleanup);
 #endif
   quickmail mailobj = quickmail_create(FROM, "libquickmail test e-mail");
+#ifdef TO
   quickmail_add_to(mailobj, TO);
+#endif
 #ifdef CC
   quickmail_add_cc(mailobj, CC);
+#endif
+#ifdef BCC
+  quickmail_add_bcc(mailobj, BCC);
 #endif
   quickmail_set_body(mailobj, "This is a test e-mail.\nThis mail was sent using libquickmail.");
   quickmail_add_attachment_file(mailobj, "test_quickmail.c");

@@ -6,6 +6,8 @@
 #else
 #include <sys/socket.h>
 #endif
+#include <stdio.h>
+#include <stdarg.h>
 
 #define READ_BUFFER_CHUNK_SIZE 128
 #define WRITE_BUFFER_CHUNK_SIZE 128
@@ -57,9 +59,18 @@ char* socket_receive_stmp (SOCKET sock);
 /*!
   \param  sock            open network socket
   \param  errmsg          optional pointer to where error message will be stored (must be freed by caller)
-  \return SMTP status code
+  \return SMTP status code (code >= 400 means error)
 */
 int socket_get_smtp_code (SOCKET sock, char** errmsg);
+
+//!send SMTP command and return status code
+/*!
+  \param  sock            open network socket
+  \param  debuglog        file handle to write debugging information to (NULL for no debugging)
+  \param  template        printf style formatting template
+  \return SMTP status code (code >= 400 means error)
+*/
+int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...);
 
 #ifdef __cplusplus
 }

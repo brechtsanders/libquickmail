@@ -84,7 +84,7 @@ int socket_data_waiting (SOCKET sock, int timeoutseconds)
   return (select(1, &rfds, NULL, NULL, &tv) > 0);
 }
 
-char* socket_receive_stmp (SOCKET sock)
+char* socket_receive_smtp (SOCKET sock)
 {
   char* buf = NULL;
   do {
@@ -111,18 +111,61 @@ char* socket_receive_stmp (SOCKET sock)
   return buf;
 }
 
-int socket_get_smtp_code (SOCKET sock, char** errmsg)
+int socket_get_smtp_code (SOCKET sock, char** message)
 {
-  char* buf = socket_receive_stmp(sock);
-  if (buf[3] != ' ')
-    return 0;
+  char* buf = socket_receive_smtp(sock);
+  if (!buf || strlen(buf) < 4 || buf[3] != ' ')
+    return 999;
   //get code
   buf[3] = 0;
   int code = atoi(buf);
   //get error message (if needed)
-  if (errmsg && code >= 400)
-    *errmsg = strdup(buf + 4);
+  if (message /*&& code >= 400*/)
+    *message = strdup(buf + 4);
   //clean up and return
   free(buf);
   return code;
+}
+
+int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
+{
+  va_list ap;
+  char* cmd;
+  char* message;
+  int cmdlen;
+  //initialize
+  va_start(ap, template);
+  //construct command to send
+  if (template == NULL) {
+    cmd = NULL;
+  } else {
+    cmdlen = vsnprintf(NULL, 0, template, ap);
+    cmd = (char*)malloc(cmdlen + 3);
+    if (!cmd) {
+      fprintf(debuglog, "Memory allocation error");
+      va_end(ap);
+      return 999;
+    }
+    vsnprintf(cmd, cmdlen + 1, template, ap);
+    strcpy(cmd + cmdlen, "\r\n");
+    cmdlen += 2;
+    //log command to send
+    if (debuglog) {
+      fprintf(debuglog, "SMTP> ");
+      vfprintf(debuglog, template, ap);
+      fprintf(debuglog, "\n");
+    }
+  }
+  //send command
+  if (cmd)
+    socket_send(sock, cmd, cmdlen);
+  //receive result
+  message = NULL;
+  int statuscode = socket_get_smtp_code(sock, &message);
+  fprintf(debuglog, "SMTP< %i %s\n", statuscode, (message ? message : ""));
+  free(message);
+  //clean up
+  free(cmd);
+  va_end(ap);
+  return statuscode;
 }

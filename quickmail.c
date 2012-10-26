@@ -484,21 +484,62 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   //connect
   if ((sock = socket_open(smtpserver, smtpport, &errmsg)) != INVALID_SOCKET) {
     //talk with SMTP server
-    statuscode = socket_smtp_command(sock, mailobj->debuglog, NULL);
-    if (statuscode >= 400) {
+    if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, NULL)) >= 400) {
       errmsg = "SMTP server returned an error on connection";
     } else {
       do {
-        statuscode = socket_smtp_command(sock, mailobj->debuglog, "HELO %s", local_hostname);
-        if (statuscode >= 400) {
-          errmsg = "SMTP HELO returned error";
-          break;
+        if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "EHLO %s", local_hostname)) >= 400) {
+          if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "HELO %s", local_hostname)) >= 400) {
+            errmsg = "SMTP EHLO/HELO returned error";
+            break;
+          }
         }
-        //authenticate if necessary
-        /////TO DO
+        //authenticate if needed
+        if (username || password) {
+          int len;
+          int inpos = 0;
+          int outpos = 0;
+          size_t usernamelen = (username ? strlen(username) : 0);
+          size_t passwordlen = (password ? strlen(password) : 0);
+          char* auth = (char*)malloc(usernamelen + passwordlen + 4);
+          char* base64auth = (char*)malloc(((usernamelen + passwordlen + 2) + 2) / 3 * 4 + 1);
+          //leave the authorization identity empty to indicate it's the same the as authentication identity
+          auth[0] = 0;
+          len = 1;
+          //set the authentication identity
+          memcpy(auth + len, (username ? username : ""), usernamelen + 1);
+          len += usernamelen + 1;
+          //set the password
+          memcpy(auth + len, (password ? password : ""), passwordlen + 1);
+          len += passwordlen;
+          //padd with extra zero so groups of 3 bytes can be read
+          auth[usernamelen + len + 1] = 0;
+          //encode in base64
+          while (inpos < len) {
+            //encode data
+            base64auth[outpos + 0] = mailobj->dtable[auth[inpos + 0] >> 2];
+            base64auth[outpos + 1] = mailobj->dtable[((auth[inpos + 0] & 3) << 4) | (auth[inpos + 1] >> 4)];
+            base64auth[outpos + 2] = mailobj->dtable[((auth[inpos + 1] & 0xF) << 2) | (auth[inpos + 2] >> 6)];
+            base64auth[outpos + 3] = mailobj->dtable[auth[inpos + 2] & 0x3F];
+            //padd with "=" characters if less than 3 characters were read
+            if (inpos + 1 >= len) {
+              base64auth[outpos + 3] = '=';
+              if (inpos + 2 >= len)
+                base64auth[outpos + 2] = '=';
+            }
+            //advance to next position
+            inpos += 3;
+            outpos += 4;
+          }
+          base64auth[outpos] = 0;
+          //send originator e-mail address
+          if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "AUTH PLAIN %s", base64auth)) >= 400) {
+            errmsg = "SMTP authentication failed";
+            break;
+          }
+        }
         //send originator e-mail address
-        statuscode = socket_smtp_command(sock, mailobj->debuglog, "MAIL FROM:<%s>", mailobj->from);
-        if (statuscode >= 400) {
+        if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "MAIL FROM:<%s>", mailobj->from)) >= 400) {
           errmsg = "SMTP server did not accept sender";
           break;
         }
@@ -506,7 +547,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
         listentry = mailobj->to;
         while (!errmsg && listentry) {
           if (listentry->data && *listentry->data) {
-            if (socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data) >= 400)
+            if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data)) >= 400)
               errmsg = "SMTP server did not accept e-mail address (To)";
           }
           listentry = listentry->next;
@@ -514,7 +555,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
         listentry = mailobj->cc;
         while (!errmsg && listentry) {
           if (listentry->data && *listentry->data) {
-            if (socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data) >= 400)
+            if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data)) >= 400)
               errmsg = "SMTP server did not accept e-mail address (CC)";
           }
           listentry = listentry->next;
@@ -522,7 +563,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
         listentry = mailobj->bcc;
         while (!errmsg && listentry) {
           if (listentry->data && *listentry->data) {
-            if (socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data) >= 400)
+            if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "RCPT TO:<%s>", listentry->data)) >= 400)
               errmsg = "SMTP server did not accept e-mail address (BCC)";
           }
           listentry = listentry->next;
@@ -530,8 +571,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
         if (errmsg)
           break;
         //prepare to send mail body
-        statuscode = socket_smtp_command(sock, mailobj->debuglog, "DATA");
-        if (statuscode >= 400) {
+        if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "DATA")) >= 400) {
           errmsg = "SMTP DATA returned error";
           break;
         }
@@ -542,8 +582,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
           socket_send(sock, buf, n);
         }
         //send end of data
-        statuscode = socket_smtp_command(sock, mailobj->debuglog, "\r\n.");
-        if (statuscode >= 400) {
+        if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "\r\n.")) >= 400) {
           errmsg = "SMTP error after sending message data";
           break;
         }

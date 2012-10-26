@@ -92,7 +92,11 @@ char* socket_receive_smtp (SOCKET sock)
     int size = READ_BUFFER_CHUNK_SIZE;
     buf = (char*)malloc(size);
     char* p = buf;
-    while (recv(sock, p, 1, 0) == 1 && *p != '\r' && *p != '\n') {
+    while (recv(sock, p, 1, 0) == 1) {
+      if (*p == '\r')
+        recv(sock, p, 1, 0);
+      if (*p == '\n')
+        break;
       p++;
       if (p - buf >= size) {
         int len = p - buf;
@@ -104,8 +108,8 @@ char* socket_receive_smtp (SOCKET sock)
         size += READ_BUFFER_CHUNK_SIZE;
       }
     }
-    while (socket_data_waiting(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
-      ;
+//    while (socket_data_waiting(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
+//      ;
     *p = 0;
   } while (!isdigit(buf[0]) || !isdigit(buf[1]) || !isdigit(buf[2]) || buf[3] != ' ');
   return buf;

@@ -1,8 +1,9 @@
 0.1.5
 
-2012-10-17  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+2012-10-27  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* added SMTP transport without libcurl
+	* added angle brackets around RCPT TO and MAIL FROM parameters
 	
 0.1.4
 

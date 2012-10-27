@@ -37,16 +37,20 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = test_quickmail$(EXEEXT)
-TESTS = test_quickmail$(EXEEXT)
+check_PROGRAMS = test_quickmail$(EXEEXT) test_quickmaillight$(EXEEXT)
+TESTS = test_quickmail$(EXEEXT) test_quickmaillight$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(libquickmail_la_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
-	install-sh ltmain.sh missing
+	$(libquickmaillight_la_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
+	TODO config.guess config.sub depcomp install-sh ltmain.sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -77,17 +81,29 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" \
-	"$(DESTDIR)$(libquickmail_ladir)"
+	"$(DESTDIR)$(libquickmail_ladir)" \
+	"$(DESTDIR)$(libquickmaillight_ladir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libquickmail_la_LIBADD =
-am_libquickmail_la_OBJECTS = quickmail.lo
+am_libquickmail_la_OBJECTS = libquickmail_la-quickmail.lo
 libquickmail_la_OBJECTS = $(am_libquickmail_la_OBJECTS)
 libquickmail_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libquickmail_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libquickmail_la_CFLAGS) \
+	$(CFLAGS) $(libquickmail_la_LDFLAGS) $(LDFLAGS) -o $@
+libquickmaillight_la_LIBADD =
+am_libquickmaillight_la_OBJECTS = libquickmaillight_la-quickmail.lo \
+	libquickmaillight_la-smtpsocket.lo
+libquickmaillight_la_OBJECTS = $(am_libquickmaillight_la_OBJECTS)
+libquickmaillight_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libquickmaillight_la_CFLAGS) $(CFLAGS) \
+	$(libquickmaillight_la_LDFLAGS) $(LDFLAGS) -o $@
 am_test_quickmail_OBJECTS = test_quickmail.$(OBJEXT)
 test_quickmail_OBJECTS = $(am_test_quickmail_OBJECTS)
 test_quickmail_DEPENDENCIES = libquickmail.la
+am_test_quickmaillight_OBJECTS = test_quickmail.$(OBJEXT)
+test_quickmaillight_OBJECTS = $(am_test_quickmaillight_OBJECTS)
+test_quickmaillight_DEPENDENCIES = libquickmaillight.la
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -101,9 +117,12 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libquickmail_la_SOURCES) $(test_quickmail_SOURCES)
-DIST_SOURCES = $(libquickmail_la_SOURCES) $(test_quickmail_SOURCES)
-HEADERS = $(libquickmail_la_HEADERS)
+SOURCES = $(libquickmail_la_SOURCES) $(libquickmaillight_la_SOURCES) \
+	$(test_quickmail_SOURCES) $(test_quickmaillight_SOURCES)
+DIST_SOURCES = $(libquickmail_la_SOURCES) \
+	$(libquickmaillight_la_SOURCES) $(test_quickmail_SOURCES) \
+	$(test_quickmaillight_SOURCES)
+HEADERS = $(libquickmail_la_HEADERS) $(libquickmaillight_la_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -181,6 +200,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+WINSOCK = @WINSOCK@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -237,13 +257,23 @@ ACLOCAL_AMFLAGS = -I m4
 
 #lib_LIBRARIES      = libquickmail.a
 #libquickmail_a_SOURCES = quickmail.c
-lib_LTLIBRARIES = libquickmail.la
+lib_LTLIBRARIES = libquickmail.la libquickmaillight.la
 libquickmail_la_SOURCES = quickmail.c
-libquickmail_la_LDFLAGS = -Wl,-no-undefined -lcurl
+libquickmail_la_CFLAGS = -O2 -DBUILD_QUICKMAIL_DLL
+libquickmail_la_LDFLAGS = -lcurl
 libquickmail_la_HEADERS = quickmail.h
 libquickmail_ladir = ${includedir}
+libquickmaillight_la_SOURCES = quickmail.c smtpsocket.c
+libquickmaillight_la_CFLAGS = -O2 -DBUILD_QUICKMAIL_DLL -DNOCURL
+libquickmaillight_la_LDFLAGS = $(WINSOCK)
+libquickmaillight_la_HEADERS = quickmail.h
+libquickmaillight_ladir = ${includedir}
 test_quickmail_SOURCES = test_quickmail.c
 test_quickmail_LDADD = libquickmail.la
+#test_quickmail_LDFLAGS = -static
+#test_quickmail_LDFLAGS = -lquickmail
+test_quickmaillight_SOURCES = test_quickmail.c
+test_quickmaillight_LDADD = libquickmaillight.la
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -333,6 +363,8 @@ clean-libLTLIBRARIES:
 	done
 libquickmail.la: $(libquickmail_la_OBJECTS) $(libquickmail_la_DEPENDENCIES) 
 	$(libquickmail_la_LINK) -rpath $(libdir) $(libquickmail_la_OBJECTS) $(libquickmail_la_LIBADD) $(LIBS)
+libquickmaillight.la: $(libquickmaillight_la_OBJECTS) $(libquickmaillight_la_DEPENDENCIES) 
+	$(libquickmaillight_la_LINK) -rpath $(libdir) $(libquickmaillight_la_OBJECTS) $(libquickmaillight_la_LIBADD) $(LIBS)
 
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -345,6 +377,9 @@ clean-checkPROGRAMS:
 test_quickmail$(EXEEXT): $(test_quickmail_OBJECTS) $(test_quickmail_DEPENDENCIES) 
 	@rm -f test_quickmail$(EXEEXT)
 	$(LINK) $(test_quickmail_OBJECTS) $(test_quickmail_LDADD) $(LIBS)
+test_quickmaillight$(EXEEXT): $(test_quickmaillight_OBJECTS) $(test_quickmaillight_DEPENDENCIES) 
+	@rm -f test_quickmaillight$(EXEEXT)
+	$(LINK) $(test_quickmaillight_OBJECTS) $(test_quickmaillight_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -352,7 +387,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quickmail.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libquickmail_la-quickmail.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libquickmaillight_la-quickmail.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libquickmaillight_la-smtpsocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_quickmail.Po@am__quote@
 
 .c.o:
@@ -375,6 +412,27 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libquickmail_la-quickmail.lo: quickmail.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libquickmail_la_CFLAGS) $(CFLAGS) -MT libquickmail_la-quickmail.lo -MD -MP -MF $(DEPDIR)/libquickmail_la-quickmail.Tpo -c -o libquickmail_la-quickmail.lo `test -f 'quickmail.c' || echo '$(srcdir)/'`quickmail.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libquickmail_la-quickmail.Tpo $(DEPDIR)/libquickmail_la-quickmail.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='quickmail.c' object='libquickmail_la-quickmail.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libquickmail_la_CFLAGS) $(CFLAGS) -c -o libquickmail_la-quickmail.lo `test -f 'quickmail.c' || echo '$(srcdir)/'`quickmail.c
+
+libquickmaillight_la-quickmail.lo: quickmail.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libquickmaillight_la_CFLAGS) $(CFLAGS) -MT libquickmaillight_la-quickmail.lo -MD -MP -MF $(DEPDIR)/libquickmaillight_la-quickmail.Tpo -c -o libquickmaillight_la-quickmail.lo `test -f 'quickmail.c' || echo '$(srcdir)/'`quickmail.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libquickmaillight_la-quickmail.Tpo $(DEPDIR)/libquickmaillight_la-quickmail.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='quickmail.c' object='libquickmaillight_la-quickmail.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libquickmaillight_la_CFLAGS) $(CFLAGS) -c -o libquickmaillight_la-quickmail.lo `test -f 'quickmail.c' || echo '$(srcdir)/'`quickmail.c
+
+libquickmaillight_la-smtpsocket.lo: smtpsocket.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libquickmaillight_la_CFLAGS) $(CFLAGS) -MT libquickmaillight_la-smtpsocket.lo -MD -MP -MF $(DEPDIR)/libquickmaillight_la-smtpsocket.Tpo -c -o libquickmaillight_la-smtpsocket.lo `test -f 'smtpsocket.c' || echo '$(srcdir)/'`smtpsocket.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libquickmaillight_la-smtpsocket.Tpo $(DEPDIR)/libquickmaillight_la-smtpsocket.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='smtpsocket.c' object='libquickmaillight_la-smtpsocket.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libquickmaillight_la_CFLAGS) $(CFLAGS) -c -o libquickmaillight_la-smtpsocket.lo `test -f 'smtpsocket.c' || echo '$(srcdir)/'`smtpsocket.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -404,6 +462,26 @@ uninstall-libquickmail_laHEADERS:
 	test -n "$$files" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(libquickmail_ladir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(libquickmail_ladir)" && rm -f $$files
+install-libquickmaillight_laHEADERS: $(libquickmaillight_la_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(libquickmaillight_ladir)" || $(MKDIR_P) "$(DESTDIR)$(libquickmaillight_ladir)"
+	@list='$(libquickmaillight_la_HEADERS)'; test -n "$(libquickmaillight_ladir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(libquickmaillight_ladir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(libquickmaillight_ladir)" || exit $$?; \
+	done
+
+uninstall-libquickmaillight_laHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libquickmaillight_la_HEADERS)'; test -n "$(libquickmaillight_ladir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(libquickmaillight_ladir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(libquickmaillight_ladir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -702,7 +780,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libquickmail_ladir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libquickmail_ladir)" "$(DESTDIR)$(libquickmaillight_ladir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -754,7 +832,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libquickmail_laHEADERS
+install-data-am: install-libquickmail_laHEADERS \
+	install-libquickmaillight_laHEADERS
 
 install-dvi: install-dvi-am
 
@@ -803,7 +882,8 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-libLTLIBRARIES \
-	uninstall-libquickmail_laHEADERS
+	uninstall-libquickmail_laHEADERS \
+	uninstall-libquickmaillight_laHEADERS
 
 .MAKE: all check-am install-am install-strip
 
@@ -818,13 +898,14 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am \
 	install-libLTLIBRARIES install-libquickmail_laHEADERS \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-libLTLIBRARIES \
-	uninstall-libquickmail_laHEADERS
+	install-libquickmaillight_laHEADERS install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-libLTLIBRARIES \
+	uninstall-libquickmail_laHEADERS \
+	uninstall-libquickmaillight_laHEADERS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

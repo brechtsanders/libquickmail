@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 #AC_PREREQ([2.63])
-AC_INIT(libquickmail, 0.1.1)
-AM_INIT_AUTOMAKE(libquickmail, 0.1.1)
+AC_INIT(libquickmail, 0.1.5)
+AM_INIT_AUTOMAKE(libquickmail, 0.1.5)
 
 # for Windows DLL support call AC_LIBTOOL_WIN32_DLL before AC_PROG_LIBTOOL
 AC_LIBTOOL_WIN32_DLL
@@ -36,5 +36,10 @@ AC_CHECK_FUNCS([memmove strdup])
 AC_CONFIG_FILES([Makefile])
 
 AC_OUTPUT
+
+if test x$target_os = xmingw32; then
+  WINSOCK=-lws2_32
+fi
+AC_SUBST([WINSOCK])
 
 #autoreconf -f -i -I m4 -I $MINGWPREFIX/share/aclocal && ./configure && make

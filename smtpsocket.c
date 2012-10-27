@@ -87,38 +87,41 @@ int socket_data_waiting (SOCKET sock, int timeoutseconds)
 char* socket_receive_smtp (SOCKET sock)
 {
   char* buf = NULL;
+  int size = READ_BUFFER_CHUNK_SIZE;
+  int pos = 0;
+  int linestart;
+  buf = (char*)malloc(size);
   do {
-    free(buf);
-    int size = READ_BUFFER_CHUNK_SIZE;
-    buf = (char*)malloc(size);
-    char* p = buf;
-    while (recv(sock, p, 1, 0) == 1) {
-      if (*p == '\r')
-        recv(sock, p, 1, 0);
-      if (*p == '\n')
-        break;
-      p++;
-      if (p - buf >= size) {
-        int len = p - buf;
-        char* newbuf = (char*)malloc(size + READ_BUFFER_CHUNK_SIZE);
-        memcpy(newbuf, buf, len);
-        free(buf);
-        buf = newbuf;
-        p = buf + len;
+    //insert line break if response is multiple lines
+    if (pos > 0) {
+      buf[pos++] = '\n';
+      if (pos >= size) {
+        buf = (char*)realloc(buf, size + READ_BUFFER_CHUNK_SIZE);
         size += READ_BUFFER_CHUNK_SIZE;
       }
     }
-//    while (socket_data_waiting(sock, 0) && recv(sock, p, 1, 0) == 1 && (*p == '\r' || *p == '\n'))
-//      ;
-    *p = 0;
-  } while (!isdigit(buf[0]) || !isdigit(buf[1]) || !isdigit(buf[2]) || buf[3] != ' ');
+    //add each character read until it is a line break
+    linestart = pos;
+    while (recv(sock, buf + pos, 1, 0) == 1) {
+      if (buf[pos] == '\r')
+        if (recv(sock, buf + pos, 1, 0) < 1)
+          break;
+      if (buf[pos] == '\n')
+        break;
+      if (++pos >= size) {
+        buf = (char*)realloc(buf, size + READ_BUFFER_CHUNK_SIZE);
+        size += READ_BUFFER_CHUNK_SIZE;
+      }
+    }
+  } while (!isdigit(buf[linestart]) || !isdigit(buf[linestart + 1]) || !isdigit(buf[linestart + 2]) || buf[linestart + 3] != ' ');
+  buf[pos] = 0;
   return buf;
 }
 
 int socket_get_smtp_code (SOCKET sock, char** message)
 {
   char* buf = socket_receive_smtp(sock);
-  if (!buf || strlen(buf) < 4 || buf[3] != ' ')
+  if (!buf || strlen(buf) < 4 || (buf[3] != ' ' && buf[3] != '-'))
     return 999;
   //get code
   buf[3] = 0;

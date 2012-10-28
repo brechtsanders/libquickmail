@@ -5,6 +5,17 @@
 #include <winsock2.h>
 #else
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#ifndef SOCKET
+#define SOCKET int
+#endif
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
+#ifndef SOCKET_ERROR
+#define SOCKET_ERROR -1
+#endif
 #endif
 #include <stdio.h>
 #include <stdarg.h>

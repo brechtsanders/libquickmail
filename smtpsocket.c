@@ -1,5 +1,7 @@
 #include "smtpsocket.h"
+#include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg)
 {
@@ -136,43 +138,40 @@ int socket_get_smtp_code (SOCKET sock, char** message)
 
 int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
 {
-  va_list ap;
-  char* cmd;
   char* message;
-  int cmdlen;
-  //initialize
-  va_start(ap, template);
-  //construct command to send
-  if (template == NULL) {
-    cmd = NULL;
-  } else {
-    cmdlen = vsnprintf(NULL, 0, template, ap);
-    cmd = (char*)malloc(cmdlen + 3);
-    if (!cmd) {
+  //send command (if one is supplied)
+  if (template) {
+    va_list ap;
+    va_list aq;
+    char* cmd;
+    int cmdlen;
+    va_start(ap, template);
+    //construct command to send
+    va_copy(aq, ap);
+    cmdlen = vsnprintf(NULL, 0, template, aq);
+    va_end(aq);
+    if ((cmd = (char*)malloc(cmdlen + 3)) == NULL) {
       fprintf(debuglog, "Memory allocation error");
       va_end(ap);
       return 999;
     }
     vsnprintf(cmd, cmdlen + 1, template, ap);
+    //log command to send
+    if (debuglog)
+      fprintf(debuglog, "SMTP> %s\n", cmd);
+    //append CR+LF
     strcpy(cmd + cmdlen, "\r\n");
     cmdlen += 2;
-    //log command to send
-    if (debuglog) {
-      fprintf(debuglog, "SMTP> ");
-      vfprintf(debuglog, template, ap);
-      fprintf(debuglog, "\n");
-    }
-  }
-  //send command
-  if (cmd)
+    //send command
     socket_send(sock, cmd, cmdlen);
+		//clean up
+    free(cmd);
+    va_end(ap);
+  }
   //receive result
   message = NULL;
   int statuscode = socket_get_smtp_code(sock, &message);
   fprintf(debuglog, "SMTP< %i %s\n", statuscode, (message ? message : ""));
   free(message);
-  //clean up
-  free(cmd);
-  va_end(ap);
   return statuscode;
 }

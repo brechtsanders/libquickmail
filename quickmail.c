@@ -480,7 +480,8 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   char local_hostname[64];
   int statuscode;
   //determine local host name
-  gethostname(local_hostname, sizeof(local_hostname));
+  if (gethostname(local_hostname, sizeof(local_hostname)) != 0)
+		strcpy(local_hostname, "localhost");
   //connect
   if ((sock = socket_open(smtpserver, smtpport, &errmsg)) != INVALID_SOCKET) {
     //talk with SMTP server

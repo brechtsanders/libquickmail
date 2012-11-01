@@ -14,7 +14,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 5
+#define LIBQUICKMAIL_VERSION_MICRO 7
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -42,12 +42,13 @@ struct email_info_struct {
   struct email_info_string_list_struct* bcc;
   char* subject;
   char* body;
-  struct email_info_string_list_struct* attachmentlist;
+  //struct email_info_string_list_struct* attachmentlist;
+  struct email_info_attachment_list_struct* attachmentlist;
   char* buf;
   int buflen;
   char* mime_boundary;
-  struct email_info_string_list_struct* current_attachment;
-  FILE* attachment_handle;
+  //struct email_info_string_list_struct* current_attachment;
+  struct email_info_attachment_list_struct* current_attachment;
   FILE* debuglog;
   char dtable[64];
 };
@@ -65,7 +66,7 @@ void email_info_string_list_add (struct email_info_string_list_struct** list, co
   while (*p)
     p = &(*p)->next;
   *p = (struct email_info_string_list_struct*)malloc(sizeof(struct email_info_string_list_struct));
-  (*p)->data = strdup(data);
+  (*p)->data = (data ? strdup(data) : NULL);
   (*p)->next = NULL;
 }
 
@@ -77,6 +78,115 @@ void email_info_string_list_free (struct email_info_string_list_struct** list)
     current = p;
     p = current->next;
     free(current->data);
+    free(current);
+  }
+  *list = NULL;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+typedef int (*email_info_attachment_open_fn)(struct email_info_attachment_list_struct* self);
+typedef size_t (*email_info_attachment_read_fn)(struct email_info_attachment_list_struct* self, void* buf, size_t len);
+typedef void (*email_info_attachment_close_fn)(struct email_info_attachment_list_struct* self);
+typedef void (*email_info_attachment_extradata_free_fn)(struct email_info_attachment_list_struct* self);
+
+struct email_info_attachment_list_struct {
+  char* path;
+  int isopen;
+  void* extradata;
+  email_info_attachment_open_fn email_info_attachment_open;
+  email_info_attachment_read_fn email_info_attachment_read;
+  email_info_attachment_close_fn email_info_attachment_close;
+  email_info_attachment_extradata_free_fn email_info_attachment_extradata_free;
+  struct email_info_attachment_list_struct* next;
+};
+
+int email_info_attachment_open_file (struct email_info_attachment_list_struct* self)
+{
+  return ((self->extradata = (void*)fopen(self->path, "rb")) != NULL ? 0 : -1);
+}
+
+size_t email_info_attachment_read_file (struct email_info_attachment_list_struct* self, void* buf, size_t len)
+{
+  return fread(buf, 1, len, (FILE*)self->extradata);
+}
+
+void email_info_attachment_close_file (struct email_info_attachment_list_struct* self)
+{
+  if ((FILE*)self->extradata) {
+    fclose((FILE*)self->extradata);
+    self->extradata = NULL;
+  }
+}
+
+void email_info_attachment_list_add_file (struct email_info_attachment_list_struct** list, const char* path)
+{
+  struct email_info_attachment_list_struct** p = list;
+  while (*p)
+    p = &(*p)->next;
+  *p = (struct email_info_attachment_list_struct*)malloc(sizeof(struct email_info_attachment_list_struct));
+  (*p)->path = (path ? strdup(path) : NULL);
+  (*p)->isopen = 0;
+  (*p)->extradata = NULL;
+  (*p)->email_info_attachment_open = email_info_attachment_open_file;
+  (*p)->email_info_attachment_read = email_info_attachment_read_file;
+  (*p)->email_info_attachment_close = email_info_attachment_close_file;
+  (*p)->email_info_attachment_extradata_free = email_info_attachment_close_file;
+  (*p)->next = NULL;
+}
+
+struct email_info_attachment_memory_extradata_struct {
+  size_t pos;
+  size_t datalen;
+  const char* data;
+};
+
+int email_info_attachment_open_memory (struct email_info_attachment_list_struct* self)
+{
+  struct email_info_attachment_memory_extradata_struct* s = (struct email_info_attachment_memory_extradata_struct*)self->extradata;
+  s->pos = 0;
+  return (s->data ? 0 : -1);
+}
+
+size_t email_info_attachment_read_memory (struct email_info_attachment_list_struct* self, void* buf, size_t len)
+{
+  struct email_info_attachment_memory_extradata_struct* s = (struct email_info_attachment_memory_extradata_struct*)self->extradata;
+  size_t n = (s->pos + len <= s->datalen ? len : s->datalen - s->pos);
+  memcpy(buf, s->data + s->pos, n);
+  s->pos += n;
+  return n;
+}
+
+void email_info_attachment_list_add_memory (struct email_info_attachment_list_struct** list, const char* filename, const char* data, size_t datalen)
+{
+  struct email_info_attachment_list_struct** p = list;
+  while (*p)
+    p = &(*p)->next;
+  *p = (struct email_info_attachment_list_struct*)malloc(sizeof(struct email_info_attachment_list_struct));
+  (*p)->path = (filename ? strdup(filename) : NULL);
+  (*p)->isopen = 0;
+  (*p)->extradata = malloc(sizeof(struct email_info_attachment_memory_extradata_struct));
+  ((struct email_info_attachment_memory_extradata_struct*)(*p)->extradata)->pos = 0;
+  ((struct email_info_attachment_memory_extradata_struct*)(*p)->extradata)->datalen = datalen;
+  ((struct email_info_attachment_memory_extradata_struct*)(*p)->extradata)->data = data;
+  (*p)->email_info_attachment_open = email_info_attachment_open_memory;
+  (*p)->email_info_attachment_read = email_info_attachment_read_memory;
+  (*p)->email_info_attachment_close = NULL;
+  (*p)->email_info_attachment_extradata_free = NULL;
+  (*p)->next = NULL;
+}
+
+void email_info_attachment_list_free (struct email_info_attachment_list_struct** list)
+{
+  struct email_info_attachment_list_struct* p = *list;
+  struct email_info_attachment_list_struct* current;
+  while (p) {
+    current = p;
+    p = current->next;
+    if (current->email_info_attachment_extradata_free)
+      current->email_info_attachment_extradata_free(current);
+    free(current->path);
+    free(current->extradata);
     free(current);
   }
   *list = NULL;
@@ -129,7 +239,6 @@ DLL_EXPORT_LIBQUICKMAIL quickmail quickmail_create (const char* from, const char
   mailobj->buflen = 0;
   mailobj->mime_boundary = NULL;
   mailobj->current_attachment = NULL;
-  mailobj->attachment_handle = NULL;
   mailobj->debuglog = NULL;
   for (i = 0; i < 26; i++) {
     mailobj->dtable[i] = (char)('A' + i);
@@ -152,11 +261,9 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_destroy (quickmail mailobj)
   email_info_string_list_free(&mailobj->bcc);
   free(mailobj->subject);
   free(mailobj->body);
-  email_info_string_list_free(&mailobj->attachmentlist);
+  email_info_attachment_list_free(&mailobj->attachmentlist);
   free(mailobj->buf);
   free(mailobj->mime_boundary);
-  if (mailobj->attachment_handle)
-    fclose(mailobj->attachment_handle);
   free(mailobj);
 }
 
@@ -168,17 +275,17 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_from (quickmail mailobj, const char* 
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_to (quickmail mailobj, const char* email)
 {
-  email_info_string_list_add(&mailobj->to, (email ? email : NULL));
+  email_info_string_list_add(&mailobj->to, email);
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_cc (quickmail mailobj, const char* email)
 {
-  email_info_string_list_add(&mailobj->cc, (email ? email : NULL));
+  email_info_string_list_add(&mailobj->cc, email);
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_bcc (quickmail mailobj, const char* email)
 {
-  email_info_string_list_add(&mailobj->bcc, (email ? email : NULL));
+  email_info_string_list_add(&mailobj->bcc, email);
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_subject (quickmail mailobj, const char* subject)
@@ -195,8 +302,15 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* 
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path)
 {
-  email_info_string_list_add(&mailobj->attachmentlist, (path ? strdup(path) : NULL));
+  email_info_attachment_list_add_file(&mailobj->attachmentlist, path);
 }
+
+/*
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* filename, char* data, size_t datalen, int mustfree)
+{
+  email_info_attachment_list_add_memory(&mailobj->attachmentlist, path);
+}
+*/
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_debug_log (quickmail mailobj, FILE* filehandle)
 {
@@ -230,9 +344,6 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     free(mailobj->mime_boundary);
     mailobj->mime_boundary = (mailobj->attachmentlist ? randomize_zeros(strdup("=SEPARATOR=_0000_0000_0000_0000_0000_0000_=")) : NULL);
     mailobj->current_attachment = mailobj->attachmentlist;
-    if (mailobj->attachment_handle)
-      fclose(mailobj->attachment_handle);
-    mailobj->attachment_handle = NULL;
     mailobj->current++;
   }
 
@@ -297,16 +408,20 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         mailobj->buflen = strlen(mailobj->buf);
         mailobj->body = NULL;
       } else if (mailobj->current_attachment) {
-        if (mailobj->attachment_handle == NULL) {
+        if (!mailobj->current_attachment->isopen) {
           //open file to attach
-          while (mailobj->current_attachment && mailobj->current_attachment->data && (mailobj->attachment_handle = fopen(mailobj->current_attachment->data, "rb")) == NULL) {
+          while (mailobj->current_attachment && mailobj->current_attachment->path) {
+            if (mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment) == 0) {
+              mailobj->current_attachment->isopen = 1;
+              break;
+            }
             mailobj->current_attachment = mailobj->current_attachment->next;
           }
           //generate attachment header
-          if (mailobj->attachment_handle != NULL) {
+          if (mailobj->current_attachment && mailobj->current_attachment->isopen) {
             //determine base filename
-            char* basename = mailobj->current_attachment->data + strlen(mailobj->current_attachment->data);
-            while (basename != mailobj->current_attachment->data) {
+            char* basename = mailobj->current_attachment->path + strlen(mailobj->current_attachment->path);
+            while (basename != mailobj->current_attachment->path) {
               basename--;
               if (*basename == '/'
 #ifdef __WIN32__
@@ -328,13 +443,13 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
           }
         } else {
           //generate next line of attachment data
-          int n;
+          size_t n = 0;
           int mimelinepos = 0;
           unsigned char igroup[3] = {0, 0, 0};
           unsigned char ogroup[4];
           mailobj->buf = (char*)malloc(MIME_LINE_WIDTH + NEWLINELENGTH + 1);
           mailobj->buflen = 0;
-          while (mimelinepos < MIME_LINE_WIDTH && (n = fread(igroup, 1, 3, mailobj->attachment_handle)) > 0) {
+          while (mimelinepos < MIME_LINE_WIDTH && (n = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment, igroup, 3)) > 0) {
             //code data
             ogroup[0] = mailobj->dtable[igroup[0] >> 2];
             ogroup[1] = mailobj->dtable[((igroup[0] & 3) << 4) | (igroup[1] >> 4)];
@@ -357,8 +472,9 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
           if (n <= 0)
           {
             //end of file
-            fclose(mailobj->attachment_handle);
-            mailobj->attachment_handle = NULL;
+            if (mailobj->current_attachment->email_info_attachment_close)
+              mailobj->current_attachment->email_info_attachment_close(mailobj->current_attachment);
+            mailobj->current_attachment->isopen = 0;
             mailobj->current_attachment = mailobj->current_attachment->next;
           }
         }

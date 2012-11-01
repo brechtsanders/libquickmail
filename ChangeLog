@@ -1,3 +1,9 @@
+0.1.7
+
+2012-11-01  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* allow sending attachments from memory
+
 0.1.6
 
 2012-10-28  Brecht Sanders  <brechtsanders@users.sourceforge.net>

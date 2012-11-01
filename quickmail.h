@@ -91,6 +91,8 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* 
 */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path);
 
+//DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* filename, char* data, size_t datalen, int mustfree);
+
 //!set the debug logging destination of a quickmail object
 /*!
   \param  mailobj     quickmail object

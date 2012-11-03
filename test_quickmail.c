@@ -1,28 +1,19 @@
 #include "quickmail.h"
 #include <stdio.h>
 
-#define FROM        "me@domain.com"
-#define TO          "user@domain.com"
+#define FROM        "my@domain.com"
+#define TO          "someuser@domain.com"
 //#define CC          "otheruser@domain.com"
 //#define BCC         "otheruser@domain.com"
-#define SMTPSERVER  "mail.server.com"
+#define SMTPSERVER  "smtp.mydomain.com"
 #define SMTPPORT    25
 #define SMTPUSER    NULL
 #define SMTPPASS    NULL
 
-#if defined(NOCURL) && defined(__WIN32__)
-#include <winsock2.h>
-#endif
-
 int main ()
 {
-#if defined(NOCURL) && defined(__WIN32__)
-  static WSADATA wsaData;
-  int wsaerr = WSAStartup(MAKEWORD(1, 0), &wsaData);
-  if (wsaerr)
-    exit(1);
-  atexit((void(*)())WSACleanup);
-#endif
+  printf("libquickmail %s\n", quickmail_get_version());
+  quickmail_initialize();
   quickmail mailobj = quickmail_create(FROM, "libquickmail test e-mail");
 #ifdef TO
   quickmail_add_to(mailobj, TO);
@@ -33,10 +24,14 @@ int main ()
 #ifdef BCC
   quickmail_add_bcc(mailobj, BCC);
 #endif
+  quickmail_add_header(mailobj, "Importance: Low");
+  quickmail_add_header(mailobj, "X-Priority: 5");
+  quickmail_add_header(mailobj, "X-MSMail-Priority:: Low");
   quickmail_set_body(mailobj, "This is a test e-mail.\nThis mail was sent using libquickmail.");
   quickmail_add_attachment_file(mailobj, "test_quickmail.c");
   quickmail_add_attachment_file(mailobj, "test_quickmail.cbp");
-/*/
+  quickmail_add_attachment_memory(mailobj, "test.txt", "Test\n123", 8, 0);
+/**/
   quickmail_fsave(mailobj, stdout);
   quickmail_destroy(mailobj);
   return 0;

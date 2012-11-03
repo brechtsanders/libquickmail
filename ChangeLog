@@ -1,8 +1,12 @@
 0.1.7
 
-2012-11-01  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+2012-11-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
-	* allow sending attachments from memory
+	* added quickmail_initialize: initialize library
+	* added quickmail_add_attachment_memory: send attachment from memory
+	* added quickmail_add_attachment_custom: send custom data attachment
+	* added quickmail_add_header: add custom mail header
+	* fixed multiple To/Cc recipients are now joined in one header line
 
 0.1.6
 
@@ -16,7 +20,7 @@
 
 	* new library libquickmaillight added with SMTP transport without libcurl
 	* added angle brackets around RCPT TO and MAIL FROM parameters
-	
+
 0.1.4
 
 2012-09-20  Brecht Sanders  <brechtsanders@users.sourceforge.net>

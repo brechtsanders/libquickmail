@@ -149,6 +149,7 @@ int main (int argc, char *argv[])
     }
     if (paramerror || !smtp_server || !quickmail_get_from(mailobj)) {
       fprintf(stderr, "Invalid command line parameters\n");
+      show_help();
       return 1;
     }
   }

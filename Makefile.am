@@ -29,6 +29,7 @@ bin_PROGRAMS = quickmail
 
 quickmail_SOURCES = quickmailprog.c
 quickmail_LDADD = libquickmail.la
+quickmail_CFLAGS = -DSTATIC
 quickmail_LDFLAGS = -static
 
 

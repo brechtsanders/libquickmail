@@ -12,20 +12,24 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES     = libquickmail.la libquickmaillight.la
 
 libquickmail_la_SOURCES = quickmail.c
-libquickmail_la_CFLAGS = -O2 -DBUILD_QUICKMAIL_DLL
+libquickmail_la_CFLAGS = -O3 -DBUILD_QUICKMAIL_DLL
 libquickmail_la_LDFLAGS = -lcurl
 libquickmail_la_HEADERS = quickmail.h
 libquickmail_ladir = ${includedir}
 
 libquickmaillight_la_SOURCES = quickmail.c smtpsocket.c
-libquickmaillight_la_CFLAGS = -O2 -DBUILD_QUICKMAIL_DLL -DNOCURL
+libquickmaillight_la_CFLAGS = -O3 -DBUILD_QUICKMAIL_DLL -DNOCURL
 libquickmaillight_la_LDFLAGS = $(WINSOCK)
 libquickmaillight_la_HEADERS = quickmail.h
 libquickmaillight_ladir = ${includedir}
 
 
 
-check_PROGRAMS = test_quickmail test_quickmaillight
+check_PROGRAMS = quickmail test_quickmail test_quickmaillight
+
+quickmail_SOURCES = quickmailprog.c
+quickmail_LDADD = libquickmail.la
+quickmail_LDFLAGS = -static
 
 test_quickmail_SOURCES = test_quickmail.c
 test_quickmail_LDADD = libquickmail.la

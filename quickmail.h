@@ -55,6 +55,13 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_destroy (quickmail mailobj);
 */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_from (quickmail mailobj, const char* from);
 
+//!get the sender (from) e-mail address of a quickmail object
+/*!
+  \param  mailobj     quickmail object
+  \return sender e-mail address
+*/
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_from (quickmail mailobj);
+
 //!add a recipient (to) e-mail address to a quickmail object
 /*!
   \param  mailobj     quickmail object
@@ -83,6 +90,13 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_bcc (quickmail mailobj, const char* e
 */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_subject (quickmail mailobj, const char* subject);
 
+//!set the subject of a quickmail object
+/*!
+  \param  mailobj     quickmail object
+  \return e-mail subject
+*/
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_subject (quickmail mailobj);
+
 //!add an e-mail header to a quickmail object
 /*!
   \param  mailobj     quickmail object
@@ -96,6 +110,13 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_header (quickmail mailobj, const char
   \param  body        e-mail body
 */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* body);
+
+//!set the body of a quickmail object
+/*!
+  \param  mailobj     quickmail object
+  \return e-mail body
+*/
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_body (quickmail mailobj);
 
 //!add a file attachment to a quickmail object
 /*!
@@ -157,6 +178,37 @@ typedef void (*quickmail_attachment_free_filedata_fn)(void* filedata);
   \param  attachment_data_filedata_free  function for cleaning up custom data in quickmail_destroy (optional, free() will be used if NULL)
 */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_custom (quickmail mailobj, const char* filename, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free);
+
+typedef void (*quickmail_attachment_free_filedata_fn)(void* filedata);
+
+//!remove attachment from quickmail object
+/*!
+  \param  mailobj     quickmail object
+  \param  filename    name of file to attach (must not include full path)
+  \return zero on success
+*/
+DLL_EXPORT_LIBQUICKMAIL int quickmail_remove_attachment (quickmail mailobj, const char* filename);
+
+//!type of pointer to function for cleaning up custom data in quickmail_destroy
+/*!
+  \param  mailobj                        quickmail object
+  \param  filename                       name of file to remove (must not include full path, case sensitive)
+  \param  attachment_data_open           function for opening attachment data
+  \param  attachment_data_read           function for reading attachment data
+  \param  attachment_data_close          function for closing attachment data (optional, free() will be used if NULL)
+  \param  callbackdata                   custom data passed to quickmail_list_attachments
+  \sa     quickmail_list_attachments()
+*/
+typedef void (*quickmail_list_attachment_callback_fn)(quickmail mailobj, const char* filename, quickmail_attachment_open_fn email_info_attachment_open, quickmail_attachment_read_fn email_info_attachment_read, quickmail_attachment_close_fn email_info_attachment_close, void* callbackdata);
+
+//!remove attachment from quickmail object
+/*!
+  \param  mailobj                        quickmail object
+  \param  callback                       function to call for each attachment
+  \param  callbackdata                   custom data to pass to the callback function
+  \sa     quickmail_list_attachment_callback_fn
+*/
+DLL_EXPORT_LIBQUICKMAIL void quickmail_list_attachments (quickmail mailobj, quickmail_list_attachment_callback_fn callback, void* callbackdata);
 
 //!set the debug logging destination of a quickmail object
 /*!

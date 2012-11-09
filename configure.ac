@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 #AC_PREREQ([2.63])
-AC_INIT(libquickmail, 0.1.7)
-AM_INIT_AUTOMAKE(libquickmail, 0.1.7)
+AC_INIT(libquickmail, 0.1.8)
+AM_INIT_AUTOMAKE(libquickmail, 0.1.8)
 
 # for Windows DLL support call AC_LIBTOOL_WIN32_DLL before AC_PROG_LIBTOOL
 AC_LIBTOOL_WIN32_DLL

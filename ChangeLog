@@ -1,3 +1,13 @@
+0.1.8
+
+2012-11-10  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added quickmail_remove_attachment: remove attachment
+	* added quickmail_list_attachments: list attachments
+	* added quickmail_set_from: get from address
+	* added quickmail_get_subject: get subject
+  * quickmail_set_subject now sets the subject instead of from address
+
 0.1.7
 
 2012-11-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>

@@ -1,6 +1,7 @@
 #include "quickmail.h"
 #include <stdio.h>
 
+/*
 #define FROM        "my@domain.com"
 #define TO          "someuser@domain.com"
 //#define CC          "otheruser@domain.com"
@@ -9,6 +10,22 @@
 #define SMTPPORT    25
 #define SMTPUSER    NULL
 #define SMTPPASS    NULL
+*/
+#define FROM        "brecht@edustria.be"
+#define TO          "brecht@edustria.be"
+//#define CC          "otheruser@domain.com"
+//#define BCC         "otheruser@domain.com"
+#define SMTPSERVER  "mail.edustria.com"
+#define SMTPPORT    2525
+#define SMTPUSER    NULL
+#define SMTPPASS    NULL
+/**/
+
+
+void list_attachment_callback (quickmail mailobj, const char* filename, quickmail_attachment_open_fn email_info_attachment_open, quickmail_attachment_read_fn email_info_attachment_read, quickmail_attachment_close_fn email_info_attachment_close, void* callbackdata)
+{
+  printf("[%i]: %s\n", ++*(int*)callbackdata, filename);
+}
 
 int main ()
 {
@@ -33,6 +50,15 @@ int main ()
   quickmail_add_attachment_memory(mailobj, "test.txt", "Test\n123", 8, 0);
 /**/
   quickmail_fsave(mailobj, stdout);
+
+  int i;
+  i = 0;
+  quickmail_list_attachments(mailobj, list_attachment_callback, &i);
+
+  quickmail_remove_attachment(mailobj, "test_quickmail.cbp");
+  i = 0;
+  quickmail_list_attachments(mailobj, list_attachment_callback, &i);
+
   quickmail_destroy(mailobj);
   return 0;
 /**/

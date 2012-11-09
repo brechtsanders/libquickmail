@@ -14,7 +14,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 7
+#define LIBQUICKMAIL_VERSION_MICRO 8
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -153,6 +153,25 @@ void email_info_attachment_list_add (struct email_info_attachment_list_struct** 
   (*p)->next = NULL;
 }
 
+void email_info_attachment_list_free_entry (struct email_info_attachment_list_struct* current)
+{
+  if (current->handle) {
+    if (current->email_info_attachment_close)
+      current->email_info_attachment_close(current->handle);
+    else
+      free(current->handle);
+    current->handle = NULL;
+  }
+  if (current->filedata) {
+    if (current->email_info_attachment_filedata_free)
+      current->email_info_attachment_filedata_free(current->filedata);
+    else
+      free(current->filedata);
+  }
+  free(current->filename);
+  free(current);
+}
+
 void email_info_attachment_list_free (struct email_info_attachment_list_struct** list)
 {
   struct email_info_attachment_list_struct* p = *list;
@@ -160,23 +179,24 @@ void email_info_attachment_list_free (struct email_info_attachment_list_struct**
   while (p) {
     current = p;
     p = current->next;
-    if (current->handle) {
-      if (current->email_info_attachment_close)
-        current->email_info_attachment_close(current->handle);
-      else
-        free(current->handle);
-      current->handle = NULL;
-    }
-    if (current->filedata) {
-      if (current->email_info_attachment_filedata_free)
-        current->email_info_attachment_filedata_free(current->filedata);
-      else
-        free(current->filedata);
-    }
-    free(current->filename);
-    free(current);
+    email_info_attachment_list_free_entry(current);
   }
   *list = NULL;
+}
+
+int email_info_attachment_list_delete (struct email_info_attachment_list_struct** list, const char* filename)
+{
+  struct email_info_attachment_list_struct** p = list;
+  while (*p) {
+    if (strcmp((*p)->filename, filename) == 0) {
+      struct email_info_attachment_list_struct* current = *p;
+      *p = current->next;
+      email_info_attachment_list_free_entry(current);
+      return 0;
+    }
+    p = &(*p)->next;
+  }
+  return -1;
 }
 
 //attachments from disk
@@ -351,6 +371,11 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_from (quickmail mailobj, const char* 
   mailobj->from = strdup(from);
 }
 
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_from (quickmail mailobj)
+{
+  return mailobj->from;
+}
+
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_to (quickmail mailobj, const char* email)
 {
   email_info_string_list_add(&mailobj->to, email);
@@ -369,7 +394,12 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_bcc (quickmail mailobj, const char* e
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_subject (quickmail mailobj, const char* subject)
 {
   free(mailobj->subject);
-  mailobj->from = (subject ? strdup(subject) : NULL);
+  mailobj->subject = (subject ? strdup(subject) : NULL);
+}
+
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_subject (quickmail mailobj)
+{
+  return mailobj->subject;
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_header (quickmail mailobj, const char* headerline)
@@ -382,6 +412,11 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* 
 {
   free(mailobj->body);
   mailobj->body = (body ? strdup(body) : NULL);
+}
+
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_body (quickmail mailobj)
+{
+  return mailobj->body;
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path)
@@ -397,6 +432,20 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_memory (quickmail mailobj,
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_custom (quickmail mailobj, const char* filename, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free)
 {
   email_info_attachment_list_add(&mailobj->attachmentlist, filename, data, attachment_data_open, attachment_data_read, attachment_data_close, attachment_data_filedata_free);
+}
+
+DLL_EXPORT_LIBQUICKMAIL int quickmail_remove_attachment (quickmail mailobj, const char* filename)
+{
+  return email_info_attachment_list_delete(&mailobj->attachmentlist, filename);
+}
+
+DLL_EXPORT_LIBQUICKMAIL void quickmail_list_attachments (quickmail mailobj, quickmail_list_attachment_callback_fn callback, void* callbackdata)
+{
+  struct email_info_attachment_list_struct* p = mailobj->attachmentlist;
+  while (p) {
+    callback(mailobj, p->filename, p->email_info_attachment_open, p->email_info_attachment_read, p->email_info_attachment_close, callbackdata);
+    p = p->next;
+  }
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_debug_log (quickmail mailobj, FILE* filehandle)

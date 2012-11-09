@@ -37,7 +37,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = test_quickmail$(EXEEXT) test_quickmaillight$(EXEEXT)
+check_PROGRAMS = quickmail$(EXEEXT) test_quickmail$(EXEEXT) \
+	test_quickmaillight$(EXEEXT)
 TESTS = test_quickmail$(EXEEXT) test_quickmaillight$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(libquickmail_la_HEADERS) \
@@ -95,6 +96,12 @@ libquickmaillight_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libquickmaillight_la_CFLAGS) $(CFLAGS) \
 	$(libquickmaillight_la_LDFLAGS) $(LDFLAGS) -o $@
+am_quickmail_OBJECTS = quickmailprog.$(OBJEXT)
+quickmail_OBJECTS = $(am_quickmail_OBJECTS)
+quickmail_DEPENDENCIES = libquickmail.la
+quickmail_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(quickmail_LDFLAGS) $(LDFLAGS) -o $@
 am_test_quickmail_OBJECTS = test_quickmail.$(OBJEXT)
 test_quickmail_OBJECTS = $(am_test_quickmail_OBJECTS)
 test_quickmail_DEPENDENCIES = libquickmail.la
@@ -115,10 +122,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libquickmail_la_SOURCES) $(libquickmaillight_la_SOURCES) \
-	$(test_quickmail_SOURCES) $(test_quickmaillight_SOURCES)
-DIST_SOURCES = $(libquickmail_la_SOURCES) \
-	$(libquickmaillight_la_SOURCES) $(test_quickmail_SOURCES) \
+	$(quickmail_SOURCES) $(test_quickmail_SOURCES) \
 	$(test_quickmaillight_SOURCES)
+DIST_SOURCES = $(libquickmail_la_SOURCES) \
+	$(libquickmaillight_la_SOURCES) $(quickmail_SOURCES) \
+	$(test_quickmail_SOURCES) $(test_quickmaillight_SOURCES)
 HEADERS = $(libquickmail_la_HEADERS) $(libquickmaillight_la_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -256,15 +264,18 @@ ACLOCAL_AMFLAGS = -I m4
 #libquickmail_a_SOURCES = quickmail.c
 lib_LTLIBRARIES = libquickmail.la libquickmaillight.la
 libquickmail_la_SOURCES = quickmail.c
-libquickmail_la_CFLAGS = -O2 -DBUILD_QUICKMAIL_DLL
+libquickmail_la_CFLAGS = -O3 -DBUILD_QUICKMAIL_DLL
 libquickmail_la_LDFLAGS = -lcurl
 libquickmail_la_HEADERS = quickmail.h
 libquickmail_ladir = ${includedir}
 libquickmaillight_la_SOURCES = quickmail.c smtpsocket.c
-libquickmaillight_la_CFLAGS = -O2 -DBUILD_QUICKMAIL_DLL -DNOCURL
+libquickmaillight_la_CFLAGS = -O3 -DBUILD_QUICKMAIL_DLL -DNOCURL
 libquickmaillight_la_LDFLAGS = $(WINSOCK)
 libquickmaillight_la_HEADERS = quickmail.h
 libquickmaillight_ladir = ${includedir}
+quickmail_SOURCES = quickmailprog.c
+quickmail_LDADD = libquickmail.la
+quickmail_LDFLAGS = -static
 test_quickmail_SOURCES = test_quickmail.c
 test_quickmail_LDADD = libquickmail.la
 #test_quickmail_LDFLAGS = -static
@@ -371,6 +382,9 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+quickmail$(EXEEXT): $(quickmail_OBJECTS) $(quickmail_DEPENDENCIES) 
+	@rm -f quickmail$(EXEEXT)
+	$(quickmail_LINK) $(quickmail_OBJECTS) $(quickmail_LDADD) $(LIBS)
 test_quickmail$(EXEEXT): $(test_quickmail_OBJECTS) $(test_quickmail_DEPENDENCIES) 
 	@rm -f test_quickmail$(EXEEXT)
 	$(LINK) $(test_quickmail_OBJECTS) $(test_quickmail_LDADD) $(LIBS)
@@ -387,6 +401,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libquickmail_la-quickmail.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libquickmaillight_la-quickmail.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libquickmaillight_la-smtpsocket.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quickmailprog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_quickmail.Po@am__quote@
 
 .c.o:

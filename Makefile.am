@@ -25,11 +25,15 @@ libquickmaillight_ladir = ${includedir}
 
 
 
-check_PROGRAMS = quickmail test_quickmail test_quickmaillight
+bin_PROGRAMS = quickmail
 
 quickmail_SOURCES = quickmailprog.c
 quickmail_LDADD = libquickmail.la
 quickmail_LDFLAGS = -static
+
+
+
+check_PROGRAMS = test_quickmail test_quickmaillight
 
 test_quickmail_SOURCES = test_quickmail.c
 test_quickmail_LDADD = libquickmail.la

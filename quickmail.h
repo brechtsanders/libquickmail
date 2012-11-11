@@ -179,8 +179,6 @@ typedef void (*quickmail_attachment_free_filedata_fn)(void* filedata);
 */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_custom (quickmail mailobj, const char* filename, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free);
 
-typedef void (*quickmail_attachment_free_filedata_fn)(void* filedata);
-
 //!remove attachment from quickmail object
 /*!
   \param  mailobj     quickmail object

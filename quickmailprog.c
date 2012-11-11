@@ -166,9 +166,12 @@ int main (int argc, char *argv[])
   }
 */
   //send e-mail
+  int status = 0;
   const char* errmsg;
-  if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, NULL, NULL)) != NULL)
+  if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, NULL, NULL)) != NULL) {
+    status = 1;
     fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
+  }
   //clean up
   quickmail_destroy(mailobj);
   return 0;

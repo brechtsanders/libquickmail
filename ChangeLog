@@ -1,3 +1,10 @@
+0.1.9
+
+2012-11-11  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* quickmail application now returns nonzero exit code on error
+	* CURL_STATICLIB is defined when building static libquickmail.a
+
 0.1.8
 
 2012-11-10  Brecht Sanders  <brechtsanders@users.sourceforge.net>

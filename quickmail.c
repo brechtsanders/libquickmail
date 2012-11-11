@@ -1,4 +1,4 @@
-#if defined(__WIN32__) && defined(DLL_EXPORT)
+#if defined(__WIN32__) && defined(DLL_EXPORT) && !defined(BUILD_QUICKMAIL_DLL)
 #define BUILD_QUICKMAIL_DLL
 #endif
 #include "quickmail.h"
@@ -7,6 +7,9 @@
 #include <string.h>
 #include <time.h>
 #ifndef NOCURL
+#if defined(STATIC) || defined(BUILD_QUICKMAIL_STATIC)
+#define CURL_STATICLIB
+#endif
 #include <curl/curl.h>
 #else
 #include "smtpsocket.h"
@@ -14,7 +17,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 8
+#define LIBQUICKMAIL_VERSION_MICRO 9
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)

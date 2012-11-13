@@ -151,7 +151,8 @@ int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
     cmdlen = vsnprintf(NULL, 0, template, aq);
     va_end(aq);
     if ((cmd = (char*)malloc(cmdlen + 3)) == NULL) {
-      fprintf(debuglog, "Memory allocation error");
+      if (debuglog)
+        fprintf(debuglog, "Memory allocation error");
       va_end(ap);
       return 999;
     }
@@ -171,7 +172,8 @@ int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
   //receive result
   message = NULL;
   int statuscode = socket_get_smtp_code(sock, &message);
-  fprintf(debuglog, "SMTP< %i %s\n", statuscode, (message ? message : ""));
+  if (debuglog)
+    fprintf(debuglog, "SMTP< %i %s\n", statuscode, (message ? message : ""));
   free(message);
   return statuscode;
 }

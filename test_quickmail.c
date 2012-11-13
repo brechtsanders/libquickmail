@@ -36,7 +36,7 @@ int main ()
   quickmail_add_attachment_file(mailobj, "test_quickmail.c");
   quickmail_add_attachment_file(mailobj, "test_quickmail.cbp");
   quickmail_add_attachment_memory(mailobj, "test.txt", "Test\n123", 8, 0);
-/**/
+/*/
   quickmail_fsave(mailobj, stdout);
 
   int i;

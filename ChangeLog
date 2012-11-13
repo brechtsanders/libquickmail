@@ -1,3 +1,10 @@
+0.1.10
+
+2012-11-13  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* don't print to debuglog if it is NULL in smtpsocket.c
+	* include arpa/inet.h in smtpsocket.h for non-Windows systems
+
 0.1.9
 
 2012-11-11  Brecht Sanders  <brechtsanders@users.sourceforge.net>

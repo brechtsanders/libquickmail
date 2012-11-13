@@ -10,7 +10,7 @@
 			<Depends filename="libquickmail_shared.cbp" />
 		</Project>
 		<Project filename="test.cbp" />
-		<Project filename="test_nocurl.cbp" />
-		<Project filename="quickmail_static.cbp" active="1" />
+		<Project filename="test_nocurl.cbp" active="1" />
+		<Project filename="quickmail_static.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

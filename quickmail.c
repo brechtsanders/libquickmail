@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #ifndef NOCURL
 #if defined(STATIC) || defined(BUILD_QUICKMAIL_STATIC)
 #define CURL_STATICLIB
@@ -17,7 +18,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 9
+#define LIBQUICKMAIL_VERSION_MICRO 10
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)

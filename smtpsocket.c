@@ -62,7 +62,7 @@ int socket_send (SOCKET sock, const char* buf, int len)
   int l = 0;
   while (len > 0 && (l = send(sock, buf, len, 0)) < len) {
     if (l == SOCKET_ERROR || l > len)
-      return total_sent;
+      return (total_sent > 0 ? total_sent : -1);
     total_sent += l;
     buf += l;
     len -= l;
@@ -92,6 +92,7 @@ char* socket_receive_smtp (SOCKET sock)
   int size = READ_BUFFER_CHUNK_SIZE;
   int pos = 0;
   int linestart;
+  int n;
   buf = (char*)malloc(size);
   do {
     //insert line break if response is multiple lines
@@ -104,17 +105,23 @@ char* socket_receive_smtp (SOCKET sock)
     }
     //add each character read until it is a line break
     linestart = pos;
-    while (recv(sock, buf + pos, 1, 0) == 1) {
+    while ((n = recv(sock, buf + pos, 1, 0)) == 1) {
+      //detect optional carriage return (CR)
       if (buf[pos] == '\r')
         if (recv(sock, buf + pos, 1, 0) < 1)
-          break;
+          return NULL;
+      //detect line feed (LF)
       if (buf[pos] == '\n')
         break;
+      //enlarge buffer if necessary
       if (++pos >= size) {
         buf = (char*)realloc(buf, size + READ_BUFFER_CHUNK_SIZE);
         size += READ_BUFFER_CHUNK_SIZE;
       }
     }
+    //exit on error (e.g. if connection is closed)
+    if (n < 1)
+      return NULL;
   } while (!isdigit(buf[linestart]) || !isdigit(buf[linestart + 1]) || !isdigit(buf[linestart + 2]) || buf[linestart + 3] != ' ');
   buf[pos] = 0;
   return buf;
@@ -139,6 +146,7 @@ int socket_get_smtp_code (SOCKET sock, char** message)
 int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
 {
   char* message;
+  int statuscode;
   //send command (if one is supplied)
   if (template) {
     va_list ap;
@@ -164,14 +172,16 @@ int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
     strcpy(cmd + cmdlen, "\r\n");
     cmdlen += 2;
     //send command
-    socket_send(sock, cmd, cmdlen);
+    statuscode = socket_send(sock, cmd, cmdlen);
 		//clean up
     free(cmd);
     va_end(ap);
+    if (statuscode < 0)
+      return 999;
   }
   //receive result
   message = NULL;
-  int statuscode = socket_get_smtp_code(sock, &message);
+  statuscode = socket_get_smtp_code(sock, &message);
   if (debuglog)
     fprintf(debuglog, "SMTP< %i %s\n", statuscode, (message ? message : ""));
   free(message);

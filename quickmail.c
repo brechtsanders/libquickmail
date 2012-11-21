@@ -8,7 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 #ifndef NOCURL
-#if defined(STATIC) || defined(BUILD_QUICKMAIL_STATIC)
+#if (defined(STATIC) || defined(BUILD_QUICKMAIL_STATIC)) && !defined(CURL_STATICLIB)
 #define CURL_STATICLIB
 #endif
 #include <curl/curl.h>
@@ -29,13 +29,15 @@
 #define NEWLINELENGTH 2
 
 #define MIME_LINE_WIDTH 72
+#define BODY_BUFFER_SIZE 256
 
-//defines used for indicating the position status
+//definitions of the differen stages of generating the message data
 #define MAILPART_INITIALIZE 0
 #define MAILPART_HEADER     1
 #define MAILPART_BODY       2
-#define MAILPART_END        3
-#define MAILPART_DONE       4
+#define MAILPART_ATTACHMENT 3
+#define MAILPART_END        4
+#define MAILPART_DONE       5
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +73,7 @@ struct email_info_struct {
   struct email_info_email_list_struct* bcc;
   char* subject;
   char* header;
-  char* body;
+  struct email_info_attachment_list_struct* body;
   struct email_info_attachment_list_struct* attachmentlist;
   char* buf;
   int buflen;
@@ -141,7 +143,7 @@ struct email_info_attachment_list_struct {
   struct email_info_attachment_list_struct* next;
 };
 
-void email_info_attachment_list_add (struct email_info_attachment_list_struct** list, const char* filename, void* filedata, quickmail_attachment_open_fn email_info_attachment_open, quickmail_attachment_read_fn email_info_attachment_read, quickmail_attachment_close_fn email_info_attachment_close, quickmail_attachment_free_filedata_fn email_info_attachment_filedata_free)
+struct email_info_attachment_list_struct* email_info_attachment_list_add (struct email_info_attachment_list_struct** list, const char* filename, void* filedata, quickmail_attachment_open_fn email_info_attachment_open, quickmail_attachment_read_fn email_info_attachment_read, quickmail_attachment_close_fn email_info_attachment_close, quickmail_attachment_free_filedata_fn email_info_attachment_filedata_free)
 {
   struct email_info_attachment_list_struct** p = list;
   while (*p)
@@ -155,6 +157,7 @@ void email_info_attachment_list_add (struct email_info_attachment_list_struct** 
   (*p)->email_info_attachment_close = email_info_attachment_close;
   (*p)->email_info_attachment_filedata_free = email_info_attachment_filedata_free;
   (*p)->next = NULL;
+  return *p;
 }
 
 void email_info_attachment_list_free_entry (struct email_info_attachment_list_struct* current)
@@ -203,7 +206,39 @@ int email_info_attachment_list_delete (struct email_info_attachment_list_struct*
   return -1;
 }
 
-//attachments from disk
+void email_info_attachment_list_close_handles (struct email_info_attachment_list_struct* list)
+{
+  struct email_info_attachment_list_struct* p = list;
+  while (p) {
+    if (p->handle) {
+      if (p->email_info_attachment_close)
+        p->email_info_attachment_close(p->handle);
+      else
+        free(p->handle);
+      p->handle = NULL;
+    }
+    p = p->next;
+  }
+}
+
+//dummy attachment functions
+
+void* email_info_attachment_open_dummy (void* filedata)
+{
+  return &email_info_attachment_open_dummy;
+}
+
+size_t email_info_attachment_read_dummy (void* handle, void* buf, size_t len)
+{
+  return 0;
+}
+
+struct email_info_attachment_list_struct* email_info_attachment_list_add_dummy (struct email_info_attachment_list_struct** list, const char* filename)
+{
+  return email_info_attachment_list_add(list, filename, NULL, email_info_attachment_open_dummy, email_info_attachment_read_dummy, NULL, NULL);
+}
+
+//file attachment functions
 
 void* email_info_attachment_open_file (void* filedata)
 {
@@ -221,7 +256,7 @@ void email_info_attachment_close_file (void* handle)
     fclose((FILE*)handle);
 }
 
-void email_info_attachment_list_add_file (struct email_info_attachment_list_struct** list, const char* path)
+struct email_info_attachment_list_struct* email_info_attachment_list_add_file (struct email_info_attachment_list_struct** list, const char* path)
 {
   //determine base filename
   const char* basename = path + strlen(path);
@@ -236,10 +271,10 @@ void email_info_attachment_list_add_file (struct email_info_attachment_list_stru
       break;
     }
   }
-  email_info_attachment_list_add(list, basename, (void*)strdup(path), email_info_attachment_open_file, email_info_attachment_read_file, email_info_attachment_close_file, NULL);
+  return email_info_attachment_list_add(list, basename, (void*)strdup(path), email_info_attachment_open_file, email_info_attachment_read_file, email_info_attachment_close_file, NULL);
 }
 
-//attachments from memory
+//memory attachment functions
 
 struct email_info_attachment_memory_filedata_struct {
   char* data;
@@ -290,13 +325,13 @@ void email_info_attachment_filedata_free_memory (void* filedata)
   }
 }
 
-void email_info_attachment_list_add_memory (struct email_info_attachment_list_struct** list, const char* filename, char* data, size_t datalen, int mustfree)
+struct email_info_attachment_list_struct* email_info_attachment_list_add_memory (struct email_info_attachment_list_struct** list, const char* filename, char* data, size_t datalen, int mustfree)
 {
   struct email_info_attachment_memory_filedata_struct* filedata = (struct email_info_attachment_memory_filedata_struct*)malloc(sizeof(struct email_info_attachment_memory_filedata_struct));
   filedata->data = data;
   filedata->datalen = datalen;
   filedata->mustfree = mustfree;
-  email_info_attachment_list_add(list, filename, filedata, email_info_attachment_open_memory, email_info_attachment_read_memory, email_info_attachment_close_memory, NULL);
+  return email_info_attachment_list_add(list, filename, filedata, email_info_attachment_open_memory, email_info_attachment_read_memory, email_info_attachment_close_memory, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -362,7 +397,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_destroy (quickmail mailobj)
   email_info_string_list_free(&mailobj->bcc);
   free(mailobj->subject);
   free(mailobj->header);
-  free(mailobj->body);
+  email_info_attachment_list_free(&mailobj->body);
   email_info_attachment_list_free(&mailobj->attachmentlist);
   free(mailobj->buf);
   free(mailobj->mime_boundary);
@@ -414,13 +449,32 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_header (quickmail mailobj, const char
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* body)
 {
-  free(mailobj->body);
-  mailobj->body = (body ? strdup(body) : NULL);
+  if (mailobj->body) {
+    email_info_attachment_list_free_entry(mailobj->body);
+    mailobj->body = NULL;
+  }
+  if (body)
+    email_info_attachment_list_add_memory(&mailobj->body, NULL, strdup(body), strlen(body), 1);
 }
 
-DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_body (quickmail mailobj)
+DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj)
 {
-  return mailobj->body;
+  size_t n;
+  char* result = NULL;
+  size_t resultlen = 0;
+  if (mailobj->body && (mailobj->body->handle = mailobj->body->email_info_attachment_open(mailobj->body->filedata)) != NULL) {
+    do {
+      result = (char*)realloc(result, resultlen + BODY_BUFFER_SIZE);
+      if ((n = mailobj->body->email_info_attachment_read(mailobj->body->handle, result + resultlen, BODY_BUFFER_SIZE)) > 0)
+        resultlen += n;
+    } while (n > 0);
+    if (mailobj->body->email_info_attachment_close)
+      mailobj->body->email_info_attachment_close(mailobj->body->handle);
+    else
+      free(mailobj->body->handle);
+    mailobj->body->handle = NULL;
+  }
+  return result;
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path)
@@ -483,7 +537,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     mailobj->buflen = 0;
     free(mailobj->mime_boundary);
     mailobj->mime_boundary = (mailobj->attachmentlist ? randomize_zeros(strdup("=SEPARATOR=_0000_0000_0000_0000_0000_0000_=")) : NULL);
-    mailobj->current_attachment = mailobj->attachmentlist;
+    mailobj->current_attachment = mailobj->body;
     mailobj->current++;
   }
 
@@ -540,15 +594,37 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       mailobj->current++;
     }
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_BODY) {
-      if (mailobj->body) {
-        //generate body part
-        mailobj->buf = mailobj->body;
-        mailobj->buflen = strlen(mailobj->buf);
-        mailobj->body = NULL;
-      } else if (mailobj->current_attachment) {
+      if (mailobj->current_attachment) {
+        if (!mailobj->current_attachment->handle) {
+          if ((mailobj->current_attachment->handle = mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment->filedata)) == NULL) {
+            mailobj->current_attachment = mailobj->attachmentlist;
+            mailobj->current++;
+          }
+        }
+        if (mailobj->current_attachment->handle) {
+          mailobj->buf = malloc(BODY_BUFFER_SIZE);
+          if ((mailobj->buflen = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, mailobj->buf, BODY_BUFFER_SIZE)) <= 0) {
+            //end of file
+            mailobj->buflen = 0;
+            if (mailobj->current_attachment->email_info_attachment_close)
+              mailobj->current_attachment->email_info_attachment_close(mailobj->current_attachment->handle);
+            else
+              free(mailobj->current_attachment->handle);
+            mailobj->current_attachment->handle = NULL;
+            mailobj->current_attachment = mailobj->attachmentlist;
+            mailobj->current++;
+          }
+        }
+      } else {
+        mailobj->current_attachment = mailobj->attachmentlist;
+        mailobj->current++;
+      }
+    }
+    if (mailobj->buflen == 0 && mailobj->current == MAILPART_ATTACHMENT) {
+      if (mailobj->current_attachment) {
         if (!mailobj->current_attachment->handle) {
           //open file to attach
-          while (mailobj->current_attachment && mailobj->current_attachment->filename) {
+          while (mailobj->current_attachment/* && mailobj->current_attachment->filename*/) {
             if ((mailobj->current_attachment->handle = mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment->filedata)) != NULL) {
               break;
             }

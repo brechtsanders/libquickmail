@@ -174,5 +174,5 @@ int main (int argc, char *argv[])
   }
   //clean up
   quickmail_destroy(mailobj);
-  return 0;
+  return status;
 }

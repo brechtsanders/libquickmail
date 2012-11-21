@@ -4,7 +4,7 @@
 
 	* fixed hang on remote SMTP disconnect if libcurl is not used
 	* quickmail application now returns nonzero exit code on error
-	* quickmail_set_body result must now be freed by caller
+	* quickmail_set_body result is no longer const and caller must free()
 
 0.1.10
 

@@ -114,9 +114,9 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* 
 //!set the body of a quickmail object
 /*!
   \param  mailobj     quickmail object
-  \return e-mail body
+  \return e-mail body (caller must free result)
 */
-DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_body (quickmail mailobj);
+DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj);
 
 //!add a file attachment to a quickmail object
 /*!

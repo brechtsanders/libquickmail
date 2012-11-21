@@ -1,3 +1,10 @@
+0.1.11
+
+2012-11-21  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed hang on remote SMTP disconnect if libcurl is not used
+	* fixed quickmail application now returns nonzero exit code on error
+
 0.1.10
 
 2012-11-13  Brecht Sanders  <brechtsanders@users.sourceforge.net>

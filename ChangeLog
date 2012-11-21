@@ -3,7 +3,8 @@
 2012-11-21  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fixed hang on remote SMTP disconnect if libcurl is not used
-	* fixed quickmail application now returns nonzero exit code on error
+	* quickmail application now returns nonzero exit code on error
+	* quickmail_set_body result must now be freed by caller
 
 0.1.10
 

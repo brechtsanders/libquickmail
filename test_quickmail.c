@@ -31,7 +31,7 @@ int main ()
 #endif
   quickmail_add_header(mailobj, "Importance: Low");
   quickmail_add_header(mailobj, "X-Priority: 5");
-  quickmail_add_header(mailobj, "X-MSMail-Priority:: Low");
+  quickmail_add_header(mailobj, "X-MSMail-Priority: Low");
   quickmail_set_body(mailobj, "This is a test e-mail.\nThis mail was sent using libquickmail.");
   quickmail_add_attachment_file(mailobj, "test_quickmail.c");
   quickmail_add_attachment_file(mailobj, "test_quickmail.cbp");

@@ -5,6 +5,13 @@
 	* fixed hang on remote SMTP disconnect if libcurl is not used
 	* quickmail application now returns nonzero exit code on error
 	* quickmail_set_body result is no longer const and caller must free()
+	* fixed missing Content-Type if no attachments
+	* added multipart/alternative support for multiple bodies
+	* added quickmail_add_body_file: add body from file
+	* added quickmail_add_body_memory: add body from memory
+	* added quickmail_add_body_custom: add body from custom source
+	* added quickmail_remove_body: remove body
+	* added quickmail_list_bodies: list bodies
 
 0.1.10
 

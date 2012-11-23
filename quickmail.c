@@ -18,7 +18,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 10
+#define LIBQUICKMAIL_VERSION_MICRO 11
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -35,9 +35,12 @@
 #define MAILPART_INITIALIZE 0
 #define MAILPART_HEADER     1
 #define MAILPART_BODY       2
-#define MAILPART_ATTACHMENT 3
-#define MAILPART_END        4
-#define MAILPART_DONE       5
+#define MAILPART_BODY_DONE  3
+#define MAILPART_ATTACHMENT 4
+#define MAILPART_END        5
+#define MAILPART_DONE       6
+
+static const char* default_mime_type = "text/plain";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -73,11 +76,12 @@ struct email_info_struct {
   struct email_info_email_list_struct* bcc;
   char* subject;
   char* header;
-  struct email_info_attachment_list_struct* body;
+  struct email_info_attachment_list_struct* bodylist;
   struct email_info_attachment_list_struct* attachmentlist;
   char* buf;
   int buflen;
-  char* mime_boundary;
+  char* mime_boundary_body;
+  char* mime_boundary_part;
   struct email_info_attachment_list_struct* current_attachment;
   FILE* debuglog;
   char dtable[64];
@@ -369,11 +373,12 @@ DLL_EXPORT_LIBQUICKMAIL quickmail quickmail_create (const char* from, const char
   mailobj->bcc = NULL;
   mailobj->subject = (subject ? strdup(subject) : NULL);
   mailobj->header = NULL;
-  mailobj->body = NULL;
+  mailobj->bodylist = NULL;
   mailobj->attachmentlist = NULL;
   mailobj->buf = NULL;
   mailobj->buflen = 0;
-  mailobj->mime_boundary = NULL;
+  mailobj->mime_boundary_body = NULL;
+  mailobj->mime_boundary_part = NULL;
   mailobj->current_attachment = NULL;
   mailobj->debuglog = NULL;
   for (i = 0; i < 26; i++) {
@@ -397,10 +402,11 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_destroy (quickmail mailobj)
   email_info_string_list_free(&mailobj->bcc);
   free(mailobj->subject);
   free(mailobj->header);
-  email_info_attachment_list_free(&mailobj->body);
+  email_info_attachment_list_free(&mailobj->bodylist);
   email_info_attachment_list_free(&mailobj->attachmentlist);
   free(mailobj->buf);
-  free(mailobj->mime_boundary);
+  free(mailobj->mime_boundary_body);
+  free(mailobj->mime_boundary_part);
   free(mailobj);
 }
 
@@ -449,12 +455,12 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_header (quickmail mailobj, const char
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* body)
 {
-  if (mailobj->body) {
-    email_info_attachment_list_free_entry(mailobj->body);
-    mailobj->body = NULL;
+  if (mailobj->bodylist) {
+    email_info_attachment_list_free_entry(mailobj->bodylist);
+    mailobj->bodylist = NULL;
   }
   if (body)
-    email_info_attachment_list_add_memory(&mailobj->body, NULL, strdup(body), strlen(body), 1);
+    email_info_attachment_list_add_memory(&mailobj->bodylist, default_mime_type, strdup(body), strlen(body), 1);
 }
 
 DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj)
@@ -462,19 +468,48 @@ DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj)
   size_t n;
   char* result = NULL;
   size_t resultlen = 0;
-  if (mailobj->body && (mailobj->body->handle = mailobj->body->email_info_attachment_open(mailobj->body->filedata)) != NULL) {
+  if (mailobj->bodylist && (mailobj->bodylist->handle = mailobj->bodylist->email_info_attachment_open(mailobj->bodylist->filedata)) != NULL) {
     do {
       result = (char*)realloc(result, resultlen + BODY_BUFFER_SIZE);
-      if ((n = mailobj->body->email_info_attachment_read(mailobj->body->handle, result + resultlen, BODY_BUFFER_SIZE)) > 0)
+      if ((n = mailobj->bodylist->email_info_attachment_read(mailobj->bodylist->handle, result + resultlen, BODY_BUFFER_SIZE)) > 0)
         resultlen += n;
     } while (n > 0);
-    if (mailobj->body->email_info_attachment_close)
-      mailobj->body->email_info_attachment_close(mailobj->body->handle);
+    if (mailobj->bodylist->email_info_attachment_close)
+      mailobj->bodylist->email_info_attachment_close(mailobj->bodylist->handle);
     else
-      free(mailobj->body->handle);
-    mailobj->body->handle = NULL;
+      free(mailobj->bodylist->handle);
+    mailobj->bodylist->handle = NULL;
   }
   return result;
+}
+
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_file (quickmail mailobj, const char* mimetype, const char* path)
+{
+  email_info_attachment_list_add(&mailobj->bodylist, (mimetype ? mimetype : default_mime_type), (void*)strdup(path), email_info_attachment_open_file, email_info_attachment_read_file, email_info_attachment_close_file, NULL);
+}
+
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_memory (quickmail mailobj, const char* mimetype, char* data, size_t datalen, int mustfree)
+{
+  email_info_attachment_list_add_memory(&mailobj->bodylist, (mimetype ? mimetype : default_mime_type), data, datalen, mustfree);
+}
+
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_custom (quickmail mailobj, const char* mimetype, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free)
+{
+  email_info_attachment_list_add(&mailobj->bodylist, (mimetype ? mimetype : default_mime_type), data, attachment_data_open, attachment_data_read, attachment_data_close, attachment_data_filedata_free);
+}
+
+DLL_EXPORT_LIBQUICKMAIL int quickmail_remove_body (quickmail mailobj, const char* mimetype)
+{
+  return email_info_attachment_list_delete(&mailobj->bodylist, mimetype);
+}
+
+DLL_EXPORT_LIBQUICKMAIL void quickmail_list_bodies (quickmail mailobj, quickmail_list_attachment_callback_fn callback, void* callbackdata)
+{
+  struct email_info_attachment_list_struct* p = mailobj->bodylist;
+  while (p) {
+    callback(mailobj, p->filename, p->email_info_attachment_open, p->email_info_attachment_read, p->email_info_attachment_close, callbackdata);
+    p = p->next;
+  }
 }
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path)
@@ -535,9 +570,11 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     free(mailobj->buf);
     mailobj->buf = NULL;
     mailobj->buflen = 0;
-    free(mailobj->mime_boundary);
-    mailobj->mime_boundary = (mailobj->attachmentlist ? randomize_zeros(strdup("=SEPARATOR=_0000_0000_0000_0000_0000_0000_=")) : NULL);
-    mailobj->current_attachment = mailobj->body;
+    free(mailobj->mime_boundary_body);
+    mailobj->mime_boundary_body = NULL;
+    free(mailobj->mime_boundary_part);
+    mailobj->mime_boundary_part = NULL;
+    mailobj->current_attachment = mailobj->bodylist;
     mailobj->current++;
   }
 
@@ -547,7 +584,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       char* s;
       //generate header part
       char** p = &mailobj->buf;
-      //mailobj->buf = NULL;
+      mailobj->buf = NULL;
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION NEWLINE);
       if (mailobj->timestamp != 0) {
         char timestamptext[32];
@@ -583,25 +620,55 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         str_append(p, mailobj->header);
       }
       if (mailobj->attachmentlist) {
-        str_append(p, "MIME-Version: 1.0" NEWLINE "Content-Type: multipart/mixed; boundary=\"");
-        str_append(p, mailobj->mime_boundary);
-        str_append(p, "\"" NEWLINE NEWLINE "--");
-        str_append(p, mailobj->mime_boundary);
-        str_append(p, NEWLINE "Content-Type: text/plain" NEWLINE);
+        str_append(p, "MIME-Version: 1.0" NEWLINE);
       }
-      str_append(p, NEWLINE);
+      if (mailobj->attachmentlist) {
+        mailobj->mime_boundary_part = randomize_zeros(strdup("=PART=SEPARATOR=_0000_0000_0000_0000_0000_0000_="));
+        str_append(p, "Content-Type: multipart/mixed; boundary=\"");
+        str_append(p, mailobj->mime_boundary_part);
+        str_append(p, "\"" NEWLINE NEWLINE "This is a multipart message in MIME format." NEWLINE NEWLINE "--");
+        str_append(p, mailobj->mime_boundary_part);
+        str_append(p, NEWLINE);
+      }
+      if (mailobj->bodylist && mailobj->bodylist->next) {
+        mailobj->mime_boundary_body = randomize_zeros(strdup("=BODY=SEPARATOR=_0000_0000_0000_0000_0000_0000_="));
+        str_append(p, "Content-Type: multipart/alternative; boundary=\"");
+        str_append(p, mailobj->mime_boundary_body);
+        str_append(p, NEWLINE);
+      }
       mailobj->buflen = strlen(mailobj->buf);
       mailobj->current++;
     }
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_BODY) {
       if (mailobj->current_attachment) {
         if (!mailobj->current_attachment->handle) {
-          if ((mailobj->current_attachment->handle = mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment->filedata)) == NULL) {
+          //open file with body data
+          while (mailobj->current_attachment) {
+            if ((mailobj->current_attachment->handle = mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment->filedata)) != NULL) {
+              break;
+            }
+            mailobj->current_attachment = mailobj->current_attachment->next;
+          }
+          if (!mailobj->current_attachment) {
             mailobj->current_attachment = mailobj->attachmentlist;
             mailobj->current++;
           }
+          //generate attachment header
+          if (mailobj->current_attachment && mailobj->current_attachment->handle) {
+            mailobj->buf = NULL;
+            if (mailobj->mime_boundary_body) {
+              mailobj->buf = str_append(&mailobj->buf, NEWLINE "--");
+              mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary_body);
+              mailobj->buf = str_append(&mailobj->buf, NEWLINE);
+            }
+            mailobj->buf = str_append(&mailobj->buf, "Content-Type: ");
+            mailobj->buf = str_append(&mailobj->buf, (mailobj->bodylist && mailobj->current_attachment->filename ? mailobj->current_attachment->filename : default_mime_type));
+            mailobj->buf = str_append(&mailobj->buf, NEWLINE "Content-Transfer-Encoding: 8bit" NEWLINE NEWLINE);
+            mailobj->buflen = strlen(mailobj->buf);
+          }
         }
-        if (mailobj->current_attachment->handle) {
+        if (mailobj->buflen == 0 && mailobj->current_attachment && mailobj->current_attachment->handle) {
+          //read body data
           mailobj->buf = malloc(BODY_BUFFER_SIZE);
           if ((mailobj->buflen = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, mailobj->buf, BODY_BUFFER_SIZE)) <= 0) {
             //end of file
@@ -611,8 +678,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             else
               free(mailobj->current_attachment->handle);
             mailobj->current_attachment->handle = NULL;
-            mailobj->current_attachment = mailobj->attachmentlist;
-            mailobj->current++;
+            mailobj->current_attachment = mailobj->current_attachment->next;
           }
         }
       } else {
@@ -620,11 +686,23 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         mailobj->current++;
       }
     }
+    if (mailobj->buflen == 0 && mailobj->current == MAILPART_BODY_DONE) {
+      mailobj->buf = NULL;
+      if (mailobj->mime_boundary_body) {
+        mailobj->buf = str_append(&mailobj->buf, NEWLINE "--");
+        mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary_body);
+        mailobj->buf = str_append(&mailobj->buf, "--" NEWLINE);
+        mailobj->buflen = strlen(mailobj->buf);
+        free(mailobj->mime_boundary_body);
+        mailobj->mime_boundary_body = NULL;
+      }
+      mailobj->current++;
+    }
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_ATTACHMENT) {
       if (mailobj->current_attachment) {
         if (!mailobj->current_attachment->handle) {
           //open file to attach
-          while (mailobj->current_attachment/* && mailobj->current_attachment->filename*/) {
+          while (mailobj->current_attachment) {
             if ((mailobj->current_attachment->handle = mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment->filedata)) != NULL) {
               break;
             }
@@ -632,11 +710,13 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
           }
           //generate attachment header
           if (mailobj->current_attachment && mailobj->current_attachment->handle) {
-            //generate attachment header
             mailobj->buf = NULL;
-            mailobj->buf = str_append(&mailobj->buf, NEWLINE "--");
-            mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary);
-            mailobj->buf = str_append(&mailobj->buf, NEWLINE "Content-Type: application/octet-stream; Name=\"");
+            if (mailobj->mime_boundary_part) {
+              mailobj->buf = str_append(&mailobj->buf, NEWLINE "--");
+              mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary_part);
+              mailobj->buf = str_append(&mailobj->buf, NEWLINE);
+            }
+            mailobj->buf = str_append(&mailobj->buf, "Content-Type: application/octet-stream; Name=\"");
             mailobj->buf = str_append(&mailobj->buf, mailobj->current_attachment->filename);
             mailobj->buf = str_append(&mailobj->buf, "\"" NEWLINE "Content-Transfer-Encoding: base64" NEWLINE NEWLINE);
             mailobj->buflen = strlen(mailobj->buf);
@@ -687,11 +767,13 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_END) {
       mailobj->buf = NULL;
       mailobj->buflen = 0;
-      if (mailobj->attachmentlist) {
+      if (mailobj->mime_boundary_part) {
         mailobj->buf = str_append(&mailobj->buf, NEWLINE "--");
-        mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary);
+        mailobj->buf = str_append(&mailobj->buf, mailobj->mime_boundary_part);
         mailobj->buf = str_append(&mailobj->buf, "--" NEWLINE);
         mailobj->buflen = strlen(mailobj->buf);
+        free(mailobj->mime_boundary_part);
+        mailobj->mime_boundary_part = NULL;
       }
       //mailobj->buf = str_append(&mailobj->buf, NEWLINE "." NEWLINE);
       //mailobj->buflen = strlen(mailobj->buf);

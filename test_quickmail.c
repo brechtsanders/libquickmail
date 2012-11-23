@@ -33,9 +33,13 @@ int main ()
   quickmail_add_header(mailobj, "X-Priority: 5");
   quickmail_add_header(mailobj, "X-MSMail-Priority: Low");
   quickmail_set_body(mailobj, "This is a test e-mail.\nThis mail was sent using libquickmail.");
+  //quickmail_add_body_memory(mailobj, NULL, "This is a test e-mail.\nThis mail was sent using libquickmail.", 64, 0);
+  quickmail_add_body_memory(mailobj, "text/html", "This is a <b>test</b> e-mail.<br/>\nThis mail was sent using <u>libquickmail</u>.", 80, 0);
+/**/
   quickmail_add_attachment_file(mailobj, "test_quickmail.c");
   quickmail_add_attachment_file(mailobj, "test_quickmail.cbp");
-  quickmail_add_attachment_memory(mailobj, "test.txt", "Test\n123", 8, 0);
+  quickmail_add_attachment_memory(mailobj, "test.log", "Test\n123", 8, 0);
+/**/
 /*/
   quickmail_fsave(mailobj, stdout);
 

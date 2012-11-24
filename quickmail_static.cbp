@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\test_libquickmail" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Debug\quickmail" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -19,7 +19,7 @@
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\test_libquickmail" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Release\quickmail" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -32,7 +32,7 @@
 				</Linker>
 			</Target>
 			<Target title="Debug64">
-				<Option output="bin\Debug64\test_libquickmail" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Debug64\quickmail" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug64\" />
 				<Option type="1" />
 				<Option compiler="mingw64" />
@@ -45,7 +45,7 @@
 				</Linker>
 			</Target>
 			<Target title="Release64">
-				<Option output="bin\Release64\test_libquickmail" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Release64\quickmail" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release64\" />
 				<Option type="1" />
 				<Option compiler="mingw64" />
@@ -59,7 +59,7 @@
 				</Linker>
 			</Target>
 			<Target title="Debug32">
-				<Option output="bin\Debug32\test_libquickmail" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Debug32\quickmail" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug32\" />
 				<Option type="1" />
 				<Option compiler="mingw32" />
@@ -71,7 +71,7 @@
 				</Linker>
 			</Target>
 			<Target title="Release32">
-				<Option output="bin\Release32\test_libquickmail" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Release32\quickmail" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release32\" />
 				<Option type="1" />
 				<Option compiler="mingw32" />

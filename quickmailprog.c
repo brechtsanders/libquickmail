@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 void show_help()
 {
@@ -15,6 +16,7 @@ void show_help()
     "  -c email       \tCc e-mail address (multiple can be specified)\n" \
     "  -b email       \tBcc e-mail address (multiple can be specified)\n" \
     "  -s subject     \tSubject\n" \
+    "  -m mimetype    \tMIME type to be used for the body (must be specified before -d)\n" \
     "  -d body        \tBody" /*", if not specified will be read from standard input"*/ "\n" \
     "  -a file        \tfile to attach (multiple can be specified)\n" \
     "  -v             \tverbose mode\n" \
@@ -33,10 +35,11 @@ int main (int argc, char *argv[])
 
   //process command line parameters
   const char* smtp_server = NULL;
+  const char* mime_type = NULL;
   int smtp_port = 25;
   {
     int i = 0;
-    const char* param;
+    char* param;
     int paramerror = 0;
     while (!paramerror && ++i < argc) {
       if (!argv[i][0] || (argv[i][0] != '/' && argv[i][0] != '-')) {
@@ -118,7 +121,7 @@ int main (int argc, char *argv[])
             else
               quickmail_set_subject(mailobj, param);
             break;
-          case 'd' :
+          case 'm' :
             if (argv[i][2])
               param = argv[i] + 2;
             else if (i + 1 < argc && argv[i + 1])
@@ -126,7 +129,19 @@ int main (int argc, char *argv[])
             if (!param)
               paramerror++;
             else
-              quickmail_set_body(mailobj, param);
+              mime_type = param;
+            break;
+          case 'd' :
+            if (argv[i][2])
+              param = argv[i] + 2;
+            else if (i + 1 < argc && argv[i + 1])
+              param = argv[++i];
+            if (!param)
+              paramerror++;
+            else {
+              quickmail_add_body_memory(mailobj, mime_type, param, strlen(param), 0);
+              mime_type = NULL;
+            }
             break;
           case 'a' :
             if (argv[i][2])
@@ -163,6 +178,13 @@ int main (int argc, char *argv[])
       fclose(f);
       quickmail_set_body(mailobj, body);
     }
+  }
+*/
+/*
+  //read body from standard input if not given
+  if (!quickmail_get_body(mailobj)) {
+    printf("No Body\n");/////
+    quickmail_add_body_filehandle(mailobj, NULL, stdin);
   }
 */
   //send e-mail

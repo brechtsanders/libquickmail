@@ -495,7 +495,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_memory (quickmail mailobj, const
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_custom (quickmail mailobj, const char* mimetype, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free)
 {
-  email_info_attachment_list_add(&mailobj->bodylist, (mimetype ? mimetype : default_mime_type), data, attachment_data_open, attachment_data_read, attachment_data_close, attachment_data_filedata_free);
+  email_info_attachment_list_add(&mailobj->bodylist, (mimetype ? mimetype : default_mime_type), data, (attachment_data_open ? attachment_data_open : email_info_attachment_open_dummy), (attachment_data_read ? attachment_data_read : email_info_attachment_read_dummy), attachment_data_close, attachment_data_filedata_free);
 }
 
 DLL_EXPORT_LIBQUICKMAIL int quickmail_remove_body (quickmail mailobj, const char* mimetype)
@@ -524,7 +524,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_memory (quickmail mailobj,
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_custom (quickmail mailobj, const char* filename, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free)
 {
-  email_info_attachment_list_add(&mailobj->attachmentlist, filename, data, attachment_data_open, attachment_data_read, attachment_data_close, attachment_data_filedata_free);
+  email_info_attachment_list_add(&mailobj->attachmentlist, filename, data, (attachment_data_open ? attachment_data_open : email_info_attachment_open_dummy), (attachment_data_read ? attachment_data_read : email_info_attachment_read_dummy), attachment_data_close, attachment_data_filedata_free);
 }
 
 DLL_EXPORT_LIBQUICKMAIL int quickmail_remove_attachment (quickmail mailobj, const char* filename)

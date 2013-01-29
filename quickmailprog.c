@@ -12,17 +12,23 @@ void show_help()
     "  -h server      \thostname or IP address of SMTP server\n" \
     "  -p port        \tTCP port to use for SMTP connection (default is 25)\n" \
     "  -f email       \tFrom e-mail address\n" \
-    "  -t email       \tTo e-mail address (multiple can be specified)\n" \
-    "  -c email       \tCc e-mail address (multiple can be specified)\n" \
-    "  -b email       \tBcc e-mail address (multiple can be specified)\n" \
+    "  -t email       \tTo e-mail address (multiple -t can be specified)\n" \
+    "  -c email       \tCc e-mail address (multiple -c can be specified)\n" \
+    "  -b email       \tBcc e-mail address (multiple -b can be specified)\n" \
     "  -s subject     \tSubject\n" \
-    "  -m mimetype    \tMIME type to be used for the body (must be specified before -d)\n" \
-    "  -d body        \tBody" /*", if not specified will be read from standard input"*/ "\n" \
-    "  -a file        \tfile to attach (multiple can be specified)\n" \
+    "  -m mimetype    \tMIME used for the body (must be specified before -d)\n" \
+    //"  -d body        \tBody, if not specified will be read from standard input\n" \
+    "  -d body        \tBody\n" \
+    "  -a file        \tfile to attach (multiple -a can be specified)\n" \
     "  -v             \tverbose mode\n" \
     "  -?             \tshow help\n" \
     "\n"
   );
+}
+
+size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
+{
+  return fread(buf, 1, len, stdin);
 }
 
 int main (int argc, char *argv[])
@@ -36,6 +42,7 @@ int main (int argc, char *argv[])
   //process command line parameters
   const char* smtp_server = NULL;
   const char* mime_type = NULL;
+  char* body = NULL;
   int smtp_port = 25;
   {
     int i = 0;
@@ -138,10 +145,8 @@ int main (int argc, char *argv[])
               param = argv[++i];
             if (!param)
               paramerror++;
-            else {
-              quickmail_add_body_memory(mailobj, mime_type, param, strlen(param), 0);
-              mime_type = NULL;
-            }
+            else if (strcmp(param, "-") != 0)
+              body = param;
             break;
           case 'a' :
             if (argv[i][2])
@@ -180,13 +185,16 @@ int main (int argc, char *argv[])
     }
   }
 */
-/*
+/*/
   //read body from standard input if not given
-  if (!quickmail_get_body(mailobj)) {
+  if (body) {
+    quickmail_add_body_memory(mailobj, mime_type, body, strlen(body), 0);
+  } else {
     printf("No Body\n");/////
-    quickmail_add_body_filehandle(mailobj, NULL, stdin);
+    quickmail_add_body_custom (mailobj, mime_type, NULL, NULL, email_info_attachment_read_stdin, NULL, NULL);
   }
-*/
+  mime_type = NULL;
+/**/
   //send e-mail
   int status = 0;
   const char* errmsg;

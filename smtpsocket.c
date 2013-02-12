@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#if _MSC_VER
+#define va_copy(dst,src) ((dest) = (src))
+#endif
 
 SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg)
 {
   struct in_addr ipv4addr;
   SOCKET sock;
+  struct sockaddr_in remote_sock_addr;
+  static const struct linger linger_option = {-1, 2};   //linger 2 seconds when disconnecting
   //determine IPv4 address of SMTP server
   ipv4addr.s_addr = inet_addr(smtpserver);
   if (ipv4addr.s_addr == INADDR_NONE) {
@@ -27,7 +32,6 @@ SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg
     return INVALID_SOCKET;
   }
   //connect
-  struct sockaddr_in remote_sock_addr;
   remote_sock_addr.sin_family = AF_INET;
   remote_sock_addr.sin_port = htons(smtpport);
   remote_sock_addr.sin_addr.s_addr = ipv4addr.s_addr;
@@ -38,7 +42,6 @@ SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg
     return INVALID_SOCKET;
   }
   //set linger option
-  static const struct linger linger_option = {-1, 2};   //linger 2 seconds when disconnecting
   setsockopt(sock, SOL_SOCKET, SO_LINGER, (const char*)&linger_option, sizeof(linger_option));
   return sock;
 }
@@ -54,12 +57,12 @@ void socket_close (SOCKET sock)
 
 int socket_send (SOCKET sock, const char* buf, int len)
 {
+  int total_sent = 0;
+  int l = 0;
   if (sock == 0 || !buf)
     return 0;
   if (len < 0)
     len = strlen(buf);
-  int total_sent = 0;
-  int l = 0;
   while (len > 0 && (l = send(sock, buf, len, 0)) < len) {
     if (l == SOCKET_ERROR || l > len)
       return (total_sent > 0 ? total_sent : -1);
@@ -72,14 +75,14 @@ int socket_send (SOCKET sock, const char* buf, int len)
 
 int socket_data_waiting (SOCKET sock, int timeoutseconds)
 {
+  fd_set rfds;
+  struct timeval tv;
   if (sock == 0)
     return 0;
   //make a set with only this socket
-  fd_set rfds;
   FD_ZERO(&rfds);
   FD_SET(sock, &rfds);
   //make a timeval with the supplied timeout
-  struct timeval tv;
   tv.tv_sec = timeoutseconds;
   tv.tv_usec = 0;
   //check the socket
@@ -129,12 +132,13 @@ char* socket_receive_smtp (SOCKET sock)
 
 int socket_get_smtp_code (SOCKET sock, char** message)
 {
+  int code;
   char* buf = socket_receive_smtp(sock);
   if (!buf || strlen(buf) < 4 || (buf[3] != ' ' && buf[3] != '-'))
     return 999;
   //get code
   buf[3] = 0;
-  int code = atoi(buf);
+  code = atoi(buf);
   //get error message (if needed)
   if (message /*&& code >= 400*/)
     *message = strdup(buf + 4);

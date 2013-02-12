@@ -6,7 +6,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#ifndef __WIN32__
 #include <unistd.h>
+#endif
+#if _MSC_VER
+#define snprintf _snprintf
+#endif
 #ifndef NOCURL
 #if (defined(STATIC) || defined(BUILD_QUICKMAIL_STATIC)) && !defined(CURL_STATICLIB)
 #define CURL_STATICLIB
@@ -294,12 +299,14 @@ struct email_info_attachment_memory_handle_struct {
 
 void* email_info_attachment_open_memory (void* filedata)
 {
-  if (!((struct email_info_attachment_memory_filedata_struct*)filedata)->data)
+  struct email_info_attachment_memory_filedata_struct* data;
+  struct email_info_attachment_memory_handle_struct* result;
+  data = ((struct email_info_attachment_memory_filedata_struct*)filedata);
+  if (!data->data)
     return NULL;
-  struct email_info_attachment_memory_filedata_struct* d = ((struct email_info_attachment_memory_filedata_struct*)filedata);
-  struct email_info_attachment_memory_handle_struct* result = (struct email_info_attachment_memory_handle_struct*)malloc(sizeof(struct email_info_attachment_memory_handle_struct));
-  result->data = d->data;
-  result->datalen = d->datalen;
+  result = (struct email_info_attachment_memory_handle_struct*)malloc(sizeof(struct email_info_attachment_memory_handle_struct));
+  result->data = data->data;
+  result->datalen = data->datalen;
   result->pos = 0;
   return result;
 }
@@ -888,6 +895,8 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, NULL)) >= 400) {
       errmsg = "SMTP server returned an error on connection";
     } else {
+      size_t n;
+      char buf[WRITE_BUFFER_CHUNK_SIZE];
       do {
         if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "EHLO %s", local_hostname)) >= 400) {
           if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "HELO %s", local_hostname)) >= 400) {
@@ -977,8 +986,6 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
           break;
         }
         //send mail body data
-        size_t n;
-        char buf[WRITE_BUFFER_CHUNK_SIZE];
         while ((n = quickmail_get_data(buf, sizeof(buf), 1, mailobj)) > 0) {
           socket_send(sock, buf, n);
         }

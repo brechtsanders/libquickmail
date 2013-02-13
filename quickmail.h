@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #if defined(BUILD_QUICKMAIL_DLL)
 #define DLL_EXPORT_LIBQUICKMAIL __declspec(dllexport)
 #elif !defined(STATIC) && !defined(BUILD_QUICKMAIL_STATIC)

@@ -1,4 +1,4 @@
-#if defined(__WIN32__) && defined(DLL_EXPORT) && !defined(BUILD_QUICKMAIL_DLL)
+#if defined(_WIN32) && defined(DLL_EXPORT) && !defined(BUILD_QUICKMAIL_DLL)
 #define BUILD_QUICKMAIL_DLL
 #endif
 #include "quickmail.h"
@@ -6,11 +6,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#ifndef __WIN32__
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 #if _MSC_VER
 #define snprintf _snprintf
+#define strdup _strdup
 #endif
 #ifndef NOCURL
 #if (defined(STATIC) || defined(BUILD_QUICKMAIL_STATIC)) && !defined(CURL_STATICLIB)
@@ -272,7 +273,7 @@ struct email_info_attachment_list_struct* email_info_attachment_list_add_file (s
   while (basename != path) {
     basename--;
     if (*basename == '/'
-#ifdef __WIN32__
+#ifdef _WIN32
         || *basename == '\\' || *basename == ':'
 #endif
     ) {
@@ -358,7 +359,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_version ()
 
 DLL_EXPORT_LIBQUICKMAIL int quickmail_initialize ()
 {
-#if defined(NOCURL) && defined(__WIN32__)
+#if defined(NOCURL) && defined(_WIN32)
   static WSADATA wsaData;
   int wsaerr = WSAStartup(MAKEWORD(1, 0), &wsaData);
   if (wsaerr)
@@ -463,7 +464,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_header (quickmail mailobj, const char
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* body)
 {
   if (mailobj->bodylist) {
-    email_info_attachment_list_free_entry(mailobj->bodylist);
+    email_info_attachment_list_free(&mailobj->bodylist);
     mailobj->bodylist = NULL;
   }
   if (body)

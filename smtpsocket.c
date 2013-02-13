@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #if _MSC_VER
-#define va_copy(dst,src) ((dest) = (src))
+#define va_copy(dst,src) ((dst) = (src))
 #endif
 
 SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg)
@@ -48,7 +48,7 @@ SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg
 
 void socket_close (SOCKET sock)
 {
-#ifndef __WIN32__
+#ifndef _WIN32
   shutdown(sock, 2);
 #else
   closesocket(sock);

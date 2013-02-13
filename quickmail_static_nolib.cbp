@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="quickmail_static" />
+		<Option title="quickmail_static_nolib" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
@@ -36,7 +36,6 @@
 				<Option object_output="obj/Debug64/" />
 				<Option type="1" />
 				<Option compiler="mingw64" />
-				<Option parameters="-v -h smtp.sanders.org -p 2525 -f brecht@sanders.org -t brecht@edustria.be -s Test -d test -a quickmailprog.c" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -87,32 +86,24 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-DBUILD_QUICKMAIL_STATIC" />
-			<Add option="-DCURL_STATICLIB" />
+			<Add option="-DNOCURL" />
 		</Compiler>
 		<Linker>
 			<Add option="-static" />
 			<Add option="-Wl,--as-needed" />
-			<Add library="libquickmail" />
-			<Add library="curl" />
-			<Add library="idn" />
-			<Add library="intl" />
-			<Add library="iconv" />
-			<Add library="ssh2" />
-			<Add library="gcrypt" />
-			<Add library="gpg-error" />
-			<Add library="rtmp" />
-			<Add library="ssl" />
-			<Add library="crypto" />
-			<Add library="z" />
-			<Add library="gdi32" />
-			<Add library="wldap32" />
 			<Add library="ws2_32" />
-			<Add library="winmm" />
-			<Add library="gnutls" />
 		</Linker>
+		<Unit filename="quickmail.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="quickmail.h" />
 		<Unit filename="quickmailprog.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="smtpsocket.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="smtpsocket.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

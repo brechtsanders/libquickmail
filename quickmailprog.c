@@ -17,8 +17,8 @@ void show_help()
     "  -b email       \tBcc e-mail address (multiple -b can be specified)\n" \
     "  -s subject     \tSubject\n" \
     "  -m mimetype    \tMIME used for the body (must be specified before -d)\n" \
-    //"  -d body        \tBody, if not specified will be read from standard input\n" \
-    "  -d body        \tBody\n" \
+/*    "  -d body        \tBody\n"*/ \
+    "  -d body        \tBody, if not specified will be read from standard input\n" \
     "  -a file        \tfile to attach (multiple -a can be specified)\n" \
     "  -v             \tverbose mode\n" \
     "  -?             \tshow help\n" \
@@ -173,7 +173,8 @@ int main (int argc, char *argv[])
       return 1;
     }
   }
-/*
+#if 1
+/*/
   //read body from standard input if not given
   if (!quickmail_get_body(mailobj)) {
     FILE* f;
@@ -184,7 +185,6 @@ int main (int argc, char *argv[])
       quickmail_set_body(mailobj, body);
     }
   }
-*/
 /*/
   //read body from standard input if not given
   if (body) {
@@ -195,6 +195,9 @@ int main (int argc, char *argv[])
   }
   mime_type = NULL;
 /**/
+#else
+  quickmail_set_body(mailobj, "Test\n123");
+#endif
   //send e-mail
   int status = 0;
   const char* errmsg;

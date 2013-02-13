@@ -36,10 +36,13 @@
 				<Option object_output="obj/Debug64/" />
 				<Option type="1" />
 				<Option compiler="mingw64" />
+				<Option parameters=" -h 10.0.0.1 -p 25 -f brecht@edustria.com -t brecht@edustria.be -s Subject-TEST -v" />
 				<Compiler>
+					<Add option="-pg" />
 					<Add option="-g" />
 				</Compiler>
 				<Linker>
+					<Add option="-pg -lgmon" />
 					<Add directory="bin/Debug64" />
 				</Linker>
 			</Target>

@@ -26,10 +26,21 @@ void show_help()
   );
 }
 
+static int read = 0;
+size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
+{
+  if (read++)
+    return 0;
+  memcpy(buf, "TEST\n123", 8);
+  return 8;
+}
+
+/*
 size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
 {
   return fread(buf, 1, len, stdin);
 }
+*/
 
 int main (int argc, char *argv[])
 {
@@ -173,31 +184,13 @@ int main (int argc, char *argv[])
       return 1;
     }
   }
-#if 1
-/*/
-  //read body from standard input if not given
-  if (!quickmail_get_body(mailobj)) {
-    FILE* f;
-    char* body = NULL;
-    if ((f = fopen(stdin, "r")) != NULL) {
-      //TO DO: read file
-      fclose(f);
-      quickmail_set_body(mailobj, body);
-    }
-  }
-/*/
   //read body from standard input if not given
   if (body) {
     quickmail_add_body_memory(mailobj, mime_type, body, strlen(body), 0);
   } else {
-    printf("No Body\n");/////
-    quickmail_add_body_custom (mailobj, mime_type, NULL, NULL, email_info_attachment_read_stdin, NULL, NULL);
+    quickmail_add_body_custom(mailobj, mime_type, NULL, NULL, email_info_attachment_read_stdin, NULL, NULL);
   }
   mime_type = NULL;
-/**/
-#else
-  quickmail_set_body(mailobj, "Test\n123");
-#endif
   //send e-mail
   int status = 0;
   const char* errmsg;

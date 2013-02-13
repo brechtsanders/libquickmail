@@ -175,8 +175,8 @@ void email_info_attachment_list_free_entry (struct email_info_attachment_list_st
   if (current->handle) {
     if (current->email_info_attachment_close)
       current->email_info_attachment_close(current->handle);
-    else
-      free(current->handle);
+    //else
+    //  free(current->handle);
     current->handle = NULL;
   }
   if (current->filedata) {
@@ -223,8 +223,8 @@ void email_info_attachment_list_close_handles (struct email_info_attachment_list
     if (p->handle) {
       if (p->email_info_attachment_close)
         p->email_info_attachment_close(p->handle);
-      else
-        free(p->handle);
+      //else
+      //  free(p->handle);
       p->handle = NULL;
     }
     p = p->next;
@@ -329,11 +329,11 @@ void email_info_attachment_close_memory (void* handle)
 
 void email_info_attachment_filedata_free_memory (void* filedata)
 {
-  struct email_info_attachment_memory_filedata_struct* d = ((struct email_info_attachment_memory_filedata_struct*)filedata);
-  if (d) {
-    if (d->mustfree)
-      free (d->data);
-    free(d);
+  struct email_info_attachment_memory_filedata_struct* data = ((struct email_info_attachment_memory_filedata_struct*)filedata);
+  if (data) {
+    if (data->mustfree)
+      free(data->data);
+    free(data);
   }
 }
 
@@ -343,7 +343,7 @@ struct email_info_attachment_list_struct* email_info_attachment_list_add_memory 
   filedata->data = data;
   filedata->datalen = datalen;
   filedata->mustfree = mustfree;
-  return email_info_attachment_list_add(list, filename, filedata, email_info_attachment_open_memory, email_info_attachment_read_memory, email_info_attachment_close_memory, NULL);
+  return email_info_attachment_list_add(list, filename, filedata, email_info_attachment_open_memory, email_info_attachment_read_memory, email_info_attachment_close_memory, email_info_attachment_filedata_free_memory);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -463,10 +463,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_header (quickmail mailobj, const char
 
 DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* body)
 {
-  if (mailobj->bodylist) {
-    email_info_attachment_list_free(&mailobj->bodylist);
-    mailobj->bodylist = NULL;
-  }
+  email_info_attachment_list_free(&mailobj->bodylist);
   if (body)
     email_info_attachment_list_add_memory(&mailobj->bodylist, default_mime_type, strdup(body), strlen(body), 1);
 }
@@ -484,8 +481,8 @@ DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj)
     } while (n > 0);
     if (mailobj->bodylist->email_info_attachment_close)
       mailobj->bodylist->email_info_attachment_close(mailobj->bodylist->handle);
-    else
-      free(mailobj->bodylist->handle);
+    //else
+    //  free(mailobj->bodylist->handle);
     mailobj->bodylist->handle = NULL;
   }
   return result;
@@ -683,8 +680,8 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             mailobj->buflen = 0;
             if (mailobj->current_attachment->email_info_attachment_close)
               mailobj->current_attachment->email_info_attachment_close(mailobj->current_attachment->handle);
-            else
-              free(mailobj->current_attachment->handle);
+            //else
+            //  free(mailobj->current_attachment->handle);
             mailobj->current_attachment->handle = NULL;
             mailobj->current_attachment = mailobj->current_attachment->next;
           }

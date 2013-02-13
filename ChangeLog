@@ -1,5 +1,10 @@
 0.1.12
 
+2013-02-13  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed bugs in custom body/attachment handling
+	* changes to support Microsoft Visual C as proposed by Troels K.
+
 2013-02-12  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* changes to support Microsoft Visual C as proposed by Troels K.

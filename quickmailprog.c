@@ -17,7 +17,6 @@ void show_help()
     "  -b email       \tBcc e-mail address (multiple -b can be specified)\n" \
     "  -s subject     \tSubject\n" \
     "  -m mimetype    \tMIME used for the body (must be specified before -d)\n" \
-/*    "  -d body        \tBody\n"*/ \
     "  -d body        \tBody, if not specified will be read from standard input\n" \
     "  -a file        \tfile to attach (multiple -a can be specified)\n" \
     "  -v             \tverbose mode\n" \
@@ -26,24 +25,19 @@ void show_help()
   );
 }
 
-static int read = 0;
-size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
-{
-  if (read++)
-    return 0;
-  memcpy(buf, "TEST\n123", 8);
-  return 8;
-}
-
-/*
 size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
 {
   return fread(buf, 1, len, stdin);
 }
-*/
 
 int main (int argc, char *argv[])
 {
+  //default values
+  const char* smtp_server = NULL;
+  const char* mime_type = NULL;
+  char* body = NULL;
+  int smtp_port = 25;
+
   //show version
   printf("quickmail %s\n", quickmail_get_version());
   //initialize mail object
@@ -51,14 +45,11 @@ int main (int argc, char *argv[])
   quickmail mailobj = quickmail_create(NULL, NULL);
 
   //process command line parameters
-  const char* smtp_server = NULL;
-  const char* mime_type = NULL;
-  char* body = NULL;
-  int smtp_port = 25;
   {
     int i = 0;
     char* param;
     int paramerror = 0;
+    unsigned recipient_count = 0;
     while (!paramerror && ++i < argc) {
       if (!argv[i][0] || (argv[i][0] != '/' && argv[i][0] != '-')) {
         paramerror++;
@@ -104,30 +95,36 @@ int main (int argc, char *argv[])
               param = argv[i] + 2;
             else if (i + 1 < argc && argv[i + 1])
               param = argv[++i];
-            if (!param)
+            if (!param) {
               paramerror++;
-            else
+            } else {
               quickmail_add_to(mailobj, param);
+              recipient_count++;
+            }
             break;
           case 'c' :
             if (argv[i][2])
               param = argv[i] + 2;
             else if (i + 1 < argc && argv[i + 1])
               param = argv[++i];
-            if (!param)
+            if (!param) {
               paramerror++;
-            else
+            } else {
               quickmail_add_cc(mailobj, param);
+              recipient_count++;
+            }
             break;
           case 'b' :
             if (argv[i][2])
               param = argv[i] + 2;
             else if (i + 1 < argc && argv[i + 1])
               param = argv[++i];
-            if (!param)
+            if (!param) {
               paramerror++;
-            else
+            } else {
               quickmail_add_bcc(mailobj, param);
+              recipient_count++;
+            }
             break;
           case 's' :
             if (argv[i][2])
@@ -181,6 +178,10 @@ int main (int argc, char *argv[])
     if (paramerror || !smtp_server || !quickmail_get_from(mailobj)) {
       fprintf(stderr, "Invalid command line parameters\n");
       show_help();
+      return 1;
+    }
+    if (recipient_count == 0) {
+      fprintf(stderr, "At least one recipient (To/Cc/Bcc) must be specified\n");
       return 1;
     }
   }

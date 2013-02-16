@@ -31,8 +31,10 @@
 
 #define LIBQUICKMAIL_VERSION VERSION_STRINGIZE(LIBQUICKMAIL_VERSION_MAJOR,LIBQUICKMAIL_VERSION_MINOR,LIBQUICKMAIL_VERSION_MICRO)
 
-#define NEWLINE "\r\n"
-#define NEWLINELENGTH 2
+//#define NEWLINE "\r\n"
+//#define NEWLINELENGTH 2
+#define NEWLINE "\n"
+#define NEWLINELENGTH 1
 
 #define MIME_LINE_WIDTH 72
 #define BODY_BUFFER_SIZE 256
@@ -677,6 +679,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
           mailobj->buf = malloc(BODY_BUFFER_SIZE);
           if ((mailobj->buflen = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, mailobj->buf, BODY_BUFFER_SIZE)) <= 0) {
             //end of file
+            free(mailobj->buf);
             mailobj->buflen = 0;
             if (mailobj->current_attachment->email_info_attachment_close)
               mailobj->current_attachment->email_info_attachment_close(mailobj->current_attachment->handle);

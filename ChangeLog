@@ -1,5 +1,11 @@
 0.1.12
 
+2013-02-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed a memory leak in quickmail_get_data when handling body data
+	* quickmail program now accepts body from stdin if not supplied
+	* quickmail program now checks if at least 1 destination is supplied
+
 2013-02-13  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fixed bugs in custom body/attachment handling

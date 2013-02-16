@@ -134,8 +134,10 @@ int socket_get_smtp_code (SOCKET sock, char** message)
 {
   int code;
   char* buf = socket_receive_smtp(sock);
-  if (!buf || strlen(buf) < 4 || (buf[3] != ' ' && buf[3] != '-'))
+  if (!buf || strlen(buf) < 4 || (buf[3] != ' ' && buf[3] != '-')) {
+    free(buf);
     return 999;
+  }
   //get code
   buf[3] = 0;
   code = atoi(buf);

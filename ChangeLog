@@ -4,6 +4,7 @@
 
 	* fixed usage info in command line help (missing -m short help)
 	* added version information of libcurl library (and dependancies)
+	* undo previous change to use LF instead of CRLF, see RFC 2822
 
 0.1.12
 

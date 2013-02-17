@@ -1,5 +1,10 @@
 0.1.13
 
+2013-02-17  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed usage info in command line help (missing -m short help)
+	* added version information of libcurl library (and dependancies)
+
 0.1.12
 
 2013-02-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>

@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#ifndef NOCURL
+#include <curl/curl.h>
+#endif
 
 void show_help()
 {
   printf(
-    "Usage:  quickmail -h server [-p port] -f email [-t email] [-c email] [-b email] [-s subject] [-d body] [-a file] [-v]\n" \
+    "Usage:  quickmail -h server [-p port] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
     "Parameters:\n" \
     "  -h server      \thostname or IP address of SMTP server\n" \
     "  -p port        \tTCP port to use for SMTP connection (default is 25)\n" \
@@ -39,7 +42,11 @@ int main (int argc, char *argv[])
   int smtp_port = 25;
 
   //show version
+#ifdef NOCURL
   printf("quickmail %s\n", quickmail_get_version());
+#else
+  printf("quickmail %s - with libcurl:\n%s\n", quickmail_get_version(), curl_version());
+#endif
   //initialize mail object
   quickmail_initialize();
   quickmail mailobj = quickmail_create(NULL, NULL);

@@ -1,3 +1,48 @@
+/*! \file      quickmailprog.c
+ *  \brief     source file of quickmail(light) application
+ *  \author    Brecht Sanders
+ *  \date      2012-2013
+ *  \copyright GPL
+ */
+/*
+    This file is part of libquickmail.
+
+    libquickmail is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    libquickmail is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with libquickmail.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/*! \page      quickmail quickmail - send e-mail from the command line
+    \details   Send e-mail from the command line.
+               Features:
+                - multiple To/Cc/Bcc recipients
+                - multiple attachments without size limitation
+               	- specifying the MIME-type to use for the message body
+    \section SYNOPSIS synopsis
+               quickmail -h server [-p port] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]
+    \section OPTIONS options
+               -h server      hostname or IP address of SMTP server
+               -p port        TCP port to use for SMTP connection (default is 25)
+               -f email       From e-mail address
+               -t email       To e-mail address (multiple -t can be specified)
+               -c email       Cc e-mail address (multiple -c can be specified)
+               -b email       Bcc e-mail address (multiple -b can be specified)
+               -s subject     Subject
+               -m mimetype    MIME used for the body (must be specified before -d)
+               -d body        Body, if not specified will be read from standard input
+               -a file        file to attach (multiple -a can be specified)
+               -v             verbose mode
+               -?             show help
+ */
+
 #include "quickmail.h"
 #include <stdio.h>
 #include <stdlib.h>

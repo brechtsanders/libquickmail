@@ -1,5 +1,13 @@
 0.1.13
 
+2013-04-04  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added man page for application (quickmail.1)
+
+2013-03-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* introduced dual licensing (GPL/commercial) and added License.txt
+
 2013-02-17  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fixed usage info in command line help (missing -m short help)

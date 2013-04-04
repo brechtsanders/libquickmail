@@ -42,12 +42,12 @@ bin_PROGRAMS = quickmail$(EXEEXT) quickmaillight$(EXEEXT)
 check_PROGRAMS = test_quickmail$(EXEEXT) test_quickmaillight$(EXEEXT)
 TESTS = test_quickmail$(EXEEXT) test_quickmaillight$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(libquickmail_la_HEADERS) \
-	$(libquickmaillight_la_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	TODO config.guess config.sub depcomp install-sh ltmain.sh \
-	missing
+DIST_COMMON = README $(am__configure_deps) $(dist_man_MANS) \
+	$(libquickmail_la_HEADERS) $(libquickmaillight_la_HEADERS) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp \
+	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -80,7 +80,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(libquickmail_ladir)" \
+	"$(DESTDIR)$(man1dir)" "$(DESTDIR)$(libquickmail_ladir)" \
 	"$(DESTDIR)$(libquickmaillight_ladir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libquickmail_la_LIBADD =
@@ -130,6 +130,9 @@ DIST_SOURCES = $(libquickmail_la_SOURCES) \
 	$(libquickmaillight_la_SOURCES) $(quickmail_SOURCES) \
 	$(quickmaillight_SOURCES) $(test_quickmail_SOURCES) \
 	$(test_quickmaillight_SOURCES)
+man1dir = $(mandir)/man1
+NROFF = nroff
+MANS = $(dist_man_MANS)
 HEADERS = $(libquickmail_la_HEADERS) $(libquickmaillight_la_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -288,6 +291,7 @@ test_quickmail_LDADD = libquickmail.la
 #test_quickmail_LDFLAGS = -lquickmail
 test_quickmaillight_SOURCES = test_quickmail.c
 test_quickmaillight_LDADD = libquickmaillight.la
+dist_man_MANS = man1/quickmail.1
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -506,6 +510,44 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
+install-man1: $(dist_man_MANS)
+	@$(NORMAL_INSTALL)
+	test -z "$(man1dir)" || $(MKDIR_P) "$(DESTDIR)$(man1dir)"
+	@list=''; test -n "$(man1dir)" || exit 0; \
+	{ for i in $$list; do echo "$$i"; done; \
+	l2='$(dist_man_MANS)'; for i in $$l2; do echo "$$i"; done | \
+	  sed -n '/\.1[a-z]*$$/p'; \
+	} | while read p; do \
+	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; echo "$$p"; \
+	done | \
+	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
+	sed 'N;N;s,\n, ,g' | { \
+	list=; while read file base inst; do \
+	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
+	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man1dir)/$$inst'"; \
+	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man1dir)/$$inst" || exit $$?; \
+	  fi; \
+	done; \
+	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
+	while read files; do \
+	  test -z "$$files" || { \
+	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man1dir)'"; \
+	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man1dir)" || exit $$?; }; \
+	done; }
+
+uninstall-man1:
+	@$(NORMAL_UNINSTALL)
+	@list=''; test -n "$(man1dir)" || exit 0; \
+	files=`{ for i in $$list; do echo "$$i"; done; \
+	l2='$(dist_man_MANS)'; for i in $$l2; do echo "$$i"; done | \
+	  sed -n '/\.1[a-z]*$$/p'; \
+	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
+	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
+	test -z "$$files" || { \
+	  echo " ( cd '$(DESTDIR)$(man1dir)' && rm -f" $$files ")"; \
+	  cd "$(DESTDIR)$(man1dir)" && rm -f $$files; }
 install-libquickmail_laHEADERS: $(libquickmail_la_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(libquickmail_ladir)" || $(MKDIR_P) "$(DESTDIR)$(libquickmail_ladir)"
@@ -692,6 +734,19 @@ check-TESTS: $(TESTS)
 	else :; fi
 
 distdir: $(DISTFILES)
+	@list='$(MANS)'; if test -n "$$list"; then \
+	  list=`for p in $$list; do \
+	    if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+	    if test -f "$$d$$p"; then echo "$$d$$p"; else :; fi; done`; \
+	  if test -n "$$list" && \
+	    grep 'ab help2man is required to generate this page' $$list >/dev/null; then \
+	    echo "error: found man pages containing the \`missing help2man' replacement text:" >&2; \
+	    grep -l 'ab help2man is required to generate this page' $$list | sed 's/^/         /' >&2; \
+	    echo "       to fix them, install help2man, remove and regenerate the man pages;" >&2; \
+	    echo "       typically \`make maintainer-clean' will remove them" >&2; \
+	    exit 1; \
+	  else :; fi; \
+	else :; fi
 	$(am__remove_distdir)
 	test -d "$(distdir)" || mkdir "$(distdir)"
 	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
@@ -842,11 +897,12 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS) config.h
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(MANS) $(HEADERS) \
+		config.h
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libquickmail_ladir)" "$(DESTDIR)$(libquickmaillight_ladir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(libquickmail_ladir)" "$(DESTDIR)$(libquickmaillight_ladir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -899,7 +955,7 @@ info: info-am
 info-am:
 
 install-data-am: install-libquickmail_laHEADERS \
-	install-libquickmaillight_laHEADERS
+	install-libquickmaillight_laHEADERS install-man
 
 install-dvi: install-dvi-am
 
@@ -915,7 +971,7 @@ install-info: install-info-am
 
 install-info-am:
 
-install-man:
+install-man: install-man1
 
 install-pdf: install-pdf-am
 
@@ -949,7 +1005,9 @@ ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES \
 	uninstall-libquickmail_laHEADERS \
-	uninstall-libquickmaillight_laHEADERS
+	uninstall-libquickmaillight_laHEADERS uninstall-man
+
+uninstall-man: uninstall-man1
 
 .MAKE: all check-am install-am install-strip
 
@@ -965,14 +1023,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am \
 	install-libLTLIBRARIES install-libquickmail_laHEADERS \
-	install-libquickmaillight_laHEADERS install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-libLTLIBRARIES uninstall-libquickmail_laHEADERS \
-	uninstall-libquickmaillight_laHEADERS
+	install-libquickmaillight_laHEADERS install-man install-man1 \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-libLTLIBRARIES \
+	uninstall-libquickmail_laHEADERS \
+	uninstall-libquickmaillight_laHEADERS uninstall-man \
+	uninstall-man1
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

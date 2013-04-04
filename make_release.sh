@@ -2,7 +2,7 @@
 BASENAME=libquickmail-`head -n 1 ChangeLog|sed -e 's/\s*$//'`
 TARBALL=$(pwd)/$BASENAME.tar.xz
 BINDIST=$BASENAME-binary.zip
-FILELIST='*.c *.h *.am *.in README AUTHORS COPYING NEWS ChangeLog INSTALL INSTALL.msys configure.ac configure autogen.sh autom4te.cache config.guess config.sub depcomp install-sh ltmain.sh *.m4 m4 missing'
+FILELIST='*.c *.h *.am *.in README AUTHORS COPYING NEWS ChangeLog INSTALL INSTALL.msys man1 configure.ac configure autogen.sh autom4te.cache config.guess config.sub depcomp install-sh ltmain.sh *.m4 m4 missing'
 
 
 # create tarball

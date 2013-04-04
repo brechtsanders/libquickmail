@@ -51,3 +51,7 @@ test_quickmaillight_LDADD = libquickmaillight.la
 #test_quickmaillight_LDFLAGS = -lquickmaillight
 
 TESTS = test_quickmail test_quickmaillight
+
+
+
+dist_man_MANS = man1/quickmail.1

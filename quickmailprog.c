@@ -55,10 +55,12 @@
 void show_help()
 {
   printf(
-    "Usage:  quickmail -h server [-p port] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
+    "Usage:  quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
     "Parameters:\n" \
     "  -h server      \thostname or IP address of SMTP server\n" \
     "  -p port        \tTCP port to use for SMTP connection (default is 25)\n" \
+    "  -u username    \tusername to use for SMTP authentication\n" \
+    "  -w password    \tpassword to use for SMTP authentication\n" \
     "  -f email       \tFrom e-mail address\n" \
     "  -t email       \tTo e-mail address (multiple -t can be specified)\n" \
     "  -c email       \tCc e-mail address (multiple -c can be specified)\n" \
@@ -82,6 +84,8 @@ int main (int argc, char *argv[])
 {
   //default values
   const char* smtp_server = NULL;
+  const char* smtp_username = NULL;
+  const char* smtp_password = NULL;
   const char* mime_type = NULL;
   char* body = NULL;
   int smtp_port = 25;
@@ -131,6 +135,26 @@ int main (int argc, char *argv[])
               paramerror++;
             else
               smtp_port = atoi(param);
+            break;
+          case 'u' :
+            if (argv[i][2])
+              param = argv[i] + 2;
+            else if (i + 1 < argc && argv[i + 1])
+              param = argv[++i];
+            if (!param)
+              paramerror++;
+            else
+              smtp_username = param;
+            break;
+          case 'w' :
+            if (argv[i][2])
+              param = argv[i] + 2;
+            else if (i + 1 < argc && argv[i + 1])
+              param = argv[++i];
+            if (!param)
+              paramerror++;
+            else
+              smtp_password = param;
             break;
           case 'f' :
             if (argv[i][2])
@@ -247,7 +271,7 @@ int main (int argc, char *argv[])
   //send e-mail
   int status = 0;
   const char* errmsg;
-  if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, NULL, NULL)) != NULL) {
+  if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, smtp_username, smtp_password)) != NULL) {
     status = 1;
     fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
   }

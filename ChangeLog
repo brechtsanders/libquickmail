@@ -1,3 +1,9 @@
+0.1.14
+
+2013-04-15  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added command line options -u username -w password
+
 0.1.13
 
 2013-04-04  Brecht Sanders  <brechtsanders@users.sourceforge.net>

@@ -27,10 +27,12 @@
                 - multiple attachments without size limitation
                	- specifying the MIME-type to use for the message body
     \section SYNOPSIS synopsis
-               quickmail -h server [-p port] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]
+               quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]
     \section OPTIONS options
                -h server      hostname or IP address of SMTP server
                -p port        TCP port to use for SMTP connection (default is 25)
+               -u username    username to use for SMTP authentication
+               -w password    password to use for SMTP authentication
                -f email       From e-mail address
                -t email       To e-mail address (multiple -t can be specified)
                -c email       Cc e-mail address (multiple -c can be specified)

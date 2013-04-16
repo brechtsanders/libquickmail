@@ -830,6 +830,19 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
   return 0;
 }
 
+#ifndef NOCURL
+char* add_angle_brackets (const char* data)
+{
+  size_t datalen = strlen(data);
+  char* result = (char*)malloc(datalen + 3);
+  result[0] = '<';
+  memcpy(result + 1, data, datalen);
+  result[datalen + 1] = '>';
+  result[datalen + 2] = 0;
+  return result;
+}
+#endif
+
 DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
 {
 #ifndef NOCURL
@@ -841,11 +854,11 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     struct curl_slist *recipients = NULL;
     struct email_info_email_list_struct* listentry;
     //set destination URL
-    size_t l = strlen(smtpserver) + 14;
-    char* url = (char*)malloc(l);
-    snprintf(url, l, "smtp://%s:%u", smtpserver, smtpport);
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    free(url);
+    size_t len = strlen(smtpserver) + 14;
+    char* addr = (char*)malloc(len);
+    snprintf(addr, len, "smtp://%s:%u", smtpserver, smtpport);
+    curl_easy_setopt(curl, CURLOPT_URL, addr);
+    free(addr);
     //try Transport Layer Security (TLS), but continue anyway if it fails
     curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_TRY);
     //don't fail if the TLS/SSL a certificate could not be verified
@@ -860,25 +873,37 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     if (password)
       curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
     //set from value for envelope reverse-path
-    if (mailobj->from && *mailobj->from)
-      curl_easy_setopt(curl, CURLOPT_MAIL_FROM, mailobj->from);
+    if (mailobj->from && *mailobj->from) {
+      addr = add_angle_brackets(mailobj->from);
+      curl_easy_setopt(curl, CURLOPT_MAIL_FROM, addr);
+      free(addr);
+    }
     //set recipients
     listentry = mailobj->to;
     while (listentry) {
-      if (listentry->data && *listentry->data)
-        recipients = curl_slist_append(recipients, listentry->data);
+      if (listentry->data && *listentry->data) {
+        addr = add_angle_brackets(listentry->data);
+        recipients = curl_slist_append(recipients, addr);
+        free(addr);
+      }
       listentry = listentry->next;
     }
     listentry = mailobj->cc;
     while (listentry) {
-      if (listentry->data && *listentry->data)
-        recipients = curl_slist_append(recipients, listentry->data);
+      if (listentry->data && *listentry->data) {
+        addr = add_angle_brackets(listentry->data);
+        recipients = curl_slist_append(recipients, addr);
+        free(addr);
+      }
       listentry = listentry->next;
     }
     listentry = mailobj->bcc;
     while (listentry) {
-      if (listentry->data && *listentry->data)
-        recipients = curl_slist_append(recipients, listentry->data);
+      if (listentry->data && *listentry->data) {
+        addr = add_angle_brackets(listentry->data);
+        recipients = curl_slist_append(recipients, addr);
+        free(addr);
+      }
       listentry = listentry->next;
     }
     curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);

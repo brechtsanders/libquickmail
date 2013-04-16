@@ -8,6 +8,7 @@ AM_INIT_AUTOMAKE(libquickmail, 0.1.14)
 # for Windows DLL support call AC_LIBTOOL_WIN32_DLL before AC_PROG_LIBTOOL
 AC_LIBTOOL_WIN32_DLL
 #LT_INIT
+AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -17,10 +18,11 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
+#AC_PROG_CXX
 
 # Checks for libraries.
 AC_HAVE_LIBRARY(curl)
-#PKG_CHECK_MODULES([CURL], [libcurl >= 7.16.0])
+#PKG_CHECK_MODULES([CURL], [libcurl >= 7.20.0])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h])

@@ -1,5 +1,9 @@
 0.1.14
 
+2013-04-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* use angle brackets with CURLOPT_MAIL_FROM/CURLOPT_MAIL_RCPT
+
 2013-04-15  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* added command line options -u username -w password

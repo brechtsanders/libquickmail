@@ -1,5 +1,9 @@
 0.1.14
 
+2013-05-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added header line for body: Content-Disposition: inline
+
 2013-04-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* use angle brackets with CURLOPT_MAIL_FROM/CURLOPT_MAIL_RCPT

@@ -687,7 +687,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             }
             mailobj->buf = str_append(&mailobj->buf, "Content-Type: ");
             mailobj->buf = str_append(&mailobj->buf, (mailobj->bodylist && mailobj->current_attachment->filename ? mailobj->current_attachment->filename : default_mime_type));
-            mailobj->buf = str_append(&mailobj->buf, NEWLINE "Content-Transfer-Encoding: 8bit" NEWLINE NEWLINE);
+            mailobj->buf = str_append(&mailobj->buf, NEWLINE "Content-Transfer-Encoding: 8bit" NEWLINE "Content-Disposition: inline" NEWLINE NEWLINE);
             mailobj->buflen = strlen(mailobj->buf);
           }
         }

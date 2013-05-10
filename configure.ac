@@ -35,6 +35,9 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove strdup])
 
+# Allow compiling with per-target flags
+AM_PROG_CC_C_O
+
 AC_CONFIG_FILES([Makefile])
 
 AC_OUTPUT

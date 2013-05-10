@@ -34,6 +34,7 @@ quickmail_LDADD = libquickmail.la
 #quickmail_LDFLAGS = -static -Wl,--as-needed -lcurl -lidn -lintl -liconv -lssh2 -lgcrypt -lgpg-error -lrtmp -lssl -lcrypto -lz -lgdi32 -lwldap32 -lws2_32 -lwinmm
 
 quickmaillight_SOURCES = quickmailprog.c
+quickmaillight_CFLAGS = -DNOCURL
 quickmaillight_LDADD = libquickmaillight.la
 
 

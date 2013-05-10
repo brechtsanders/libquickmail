@@ -1,5 +1,10 @@
 0.1.15
 
+2013-05-10  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fix automake to add -DNOCURL when compiling quickmaillight
+	* fix autoconf to allow compiling with per-target flags
+
 0.1.14
 
 2013-05-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>

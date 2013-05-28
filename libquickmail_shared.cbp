@@ -7,8 +7,8 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\libquickmail" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug\" />
+				<Option output="bin/Debug/libquickmail" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).dll" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
@@ -18,8 +18,8 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\libquickmail" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release\" />
+				<Option output="bin/Release/libquickmail" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).dll" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
@@ -32,8 +32,8 @@
 				</Linker>
 			</Target>
 			<Target title="Debug64">
-				<Option output="bin\Debug64\libquickmail" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug64\" />
+				<Option output="bin/Debug64/libquickmail" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).dll" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug64/" />
 				<Option type="3" />
 				<Option compiler="mingw64" />
 				<Option createDefFile="1" />
@@ -43,8 +43,8 @@
 				</Compiler>
 			</Target>
 			<Target title="Release64">
-				<Option output="bin\Release64\libquickmail" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release64\" />
+				<Option output="bin/Release64/libquickmail" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).dll" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release64/" />
 				<Option type="3" />
 				<Option compiler="mingw64" />
 				<Option createDefFile="1" />
@@ -57,8 +57,8 @@
 				</Linker>
 			</Target>
 			<Target title="Debug32">
-				<Option output="bin\Debug32\libquickmail" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug32\" />
+				<Option output="bin/Debug32/libquickmail" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).dll" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug32/" />
 				<Option type="3" />
 				<Option compiler="mingw32" />
 				<Option createDefFile="1" />
@@ -68,8 +68,8 @@
 				</Compiler>
 			</Target>
 			<Target title="Release32">
-				<Option output="bin\Release32\libquickmail" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release32\" />
+				<Option output="bin/Release32/libquickmail" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).dll" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release32/" />
 				<Option type="3" />
 				<Option compiler="mingw32" />
 				<Option createDefFile="1" />

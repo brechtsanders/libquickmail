@@ -20,15 +20,16 @@
     You should have received a copy of the GNU General Public License
     along with libquickmail.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*! \page      quickmail quickmail - send e-mail from the command line
-    \details   Send e-mail from the command line.
-               Features:
-                - multiple To/Cc/Bcc recipients
-                - multiple attachments without size limitation
-               	- specifying the MIME-type to use for the message body
+/*! \page     quickmail quickmail - send e-mail from the command line
+    \details  Send e-mail from the command line.
+              Features:
+               - multiple To/Cc/Bcc recipients
+               - multiple attachments without size limitation
+               - specifying the MIME-type to use for the message body
     \section SYNOPSIS synopsis
-               quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]
+              quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v] [-?]
     \section OPTIONS options
+              \verbatim
                -h server      hostname or IP address of SMTP server
                -p port        TCP port to use for SMTP connection (default is 25)
                -u username    username to use for SMTP authentication
@@ -43,6 +44,7 @@
                -a file        file to attach (multiple -a can be specified)
                -v             verbose mode
                -?             show help
+              \endverbatim
  */
 
 #include "quickmail.h"

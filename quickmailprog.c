@@ -242,7 +242,7 @@ int main (int argc, char *argv[])
             if (!param)
               paramerror++;
             else
-              quickmail_add_attachment_file(mailobj, param);
+              quickmail_add_attachment_file(mailobj, param, NULL);
             break;
           case 'v' :
             quickmail_set_debug_log(mailobj, stdout);

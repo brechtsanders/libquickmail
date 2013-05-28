@@ -82,7 +82,8 @@ typedef void (*quickmail_attachment_free_filedata_fn)(void* filedata);
 
 /*! \brief type of pointer to function for cleaning up custom data in quickmail_destroy
  * \param  mailobj                        quickmail object
- * \param  filename                       mime type for body or name of file for attachment
+ * \param  filename                       attachment filename (same value as mimetype for mail body)
+ * \param  mimetype                       MIME type
  * \param  attachment_data_open           function for opening attachment data
  * \param  attachment_data_read           function for reading attachment data
  * \param  attachment_data_close          function for closing attachment data (optional, free() will be used if NULL)
@@ -90,7 +91,7 @@ typedef void (*quickmail_attachment_free_filedata_fn)(void* filedata);
  * \sa     quickmail_list_bodies()
  * \sa     quickmail_list_attachments()
  */
-typedef void (*quickmail_list_attachment_callback_fn)(quickmail mailobj, const char* filename, quickmail_attachment_open_fn email_info_attachment_open, quickmail_attachment_read_fn email_info_attachment_read, quickmail_attachment_close_fn email_info_attachment_close, void* callbackdata);
+typedef void (*quickmail_list_attachment_callback_fn)(quickmail mailobj, const char* filename, const char* mimetype, quickmail_attachment_open_fn email_info_attachment_open, quickmail_attachment_read_fn email_info_attachment_read, quickmail_attachment_close_fn email_info_attachment_close, void* callbackdata);
 
 
 
@@ -179,14 +180,14 @@ DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj);
 
 /*! \brief add a body file to a quickmail object (deprecated)
  * \param  mailobj     quickmail object
- * \param  mimetype    mime type (text/plain will be used if set to NULL)
+ * \param  mimetype    MIME type (text/plain will be used if set to NULL)
  * \param  path        path of file with body data
  */
 DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_file (quickmail mailobj, const char* mimetype, const char* path);
 
 /*! \brief add a body from memory to a quickmail object
  * \param  mailobj     quickmail object
- * \param  mimetype    mime type (text/plain will be used if set to NULL)
+ * \param  mimetype    MIME type (text/plain will be used if set to NULL)
  * \param  data        body content
  * \param  datalen     size of data in bytes
  * \param  mustfree    non-zero if data must be freed by quickmail_destroy
@@ -195,7 +196,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_memory (quickmail mailobj, const
 
 /*! \brief add a body with custom read functions to a quickmail object
  * \param  mailobj                        quickmail object
- * \param  mimetype                       mime type (text/plain will be used if set to NULL)
+ * \param  mimetype                       MIME type (text/plain will be used if set to NULL)
  * \param  data                           custom data passed to attachment_data_open and attachment_data_filedata_free functions
  * \param  attachment_data_open           function for opening attachment data
  * \param  attachment_data_read           function for reading attachment data
@@ -206,7 +207,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_add_body_custom (quickmail mailobj, const
 
 /*! \brief remove body from quickmail object
  * \param  mailobj     quickmail object
- * \param  mimetype    mime type (text/plain will be used if set to NULL)
+ * \param  mimetype    MIME type (text/plain will be used if set to NULL)
  * \return zero on success
  */
 DLL_EXPORT_LIBQUICKMAIL int quickmail_remove_body (quickmail mailobj, const char* mimetype);
@@ -222,28 +223,31 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_list_bodies (quickmail mailobj, quickmail
 /*! \brief add a file attachment to a quickmail object
  * \param  mailobj     quickmail object
  * \param  path        path of file to attach
+ * \param  mimetype    MIME type of file to attach (application/octet-stream will be used if set to NULL)
  */
-DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path);
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_file (quickmail mailobj, const char* path, const char* mimetype);
 
 /*! \brief add an attachment from memory to a quickmail object
  * \param  mailobj     quickmail object
  * \param  filename    name of file to attach (must not include full path)
+ * \param  mimetype    MIME type of file to attach (set to NULL for default binary file)
  * \param  data        data content
  * \param  datalen     size of data in bytes
  * \param  mustfree    non-zero if data must be freed by quickmail_destroy
  */
-DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_memory (quickmail mailobj, const char* filename, char* data, size_t datalen, int mustfree);
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_memory (quickmail mailobj, const char* filename, const char* mimetype, char* data, size_t datalen, int mustfree);
 
 /*! \brief add an attachment with custom read functions to a quickmail object
  * \param  mailobj                        quickmail object
  * \param  filename                       name of file to attach (must not include full path)
+ * \param  mimetype                       MIME type of file to attach (set to NULL for default binary file)
  * \param  data                           custom data passed to attachment_data_open and attachment_data_filedata_free functions
  * \param  attachment_data_open           function for opening attachment data
  * \param  attachment_data_read           function for reading attachment data
  * \param  attachment_data_close          function for closing attachment data (optional, free() will be used if NULL)
  * \param  attachment_data_filedata_free  function for cleaning up custom data in quickmail_destroy (optional, free() will be used if NULL)
  */
-DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_custom (quickmail mailobj, const char* filename, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free);
+DLL_EXPORT_LIBQUICKMAIL void quickmail_add_attachment_custom (quickmail mailobj, const char* filename, const char* mimetype, char* data, quickmail_attachment_open_fn attachment_data_open, quickmail_attachment_read_fn attachment_data_read, quickmail_attachment_close_fn attachment_data_close, quickmail_attachment_free_filedata_fn attachment_data_filedata_free);
 
 /*! \brief remove attachment from quickmail object
  * \param  mailobj     quickmail object

@@ -53,9 +53,9 @@ int main ()
   //quickmail_add_body_memory(mailobj, NULL, "This is a test e-mail.\nThis mail was sent using libquickmail.", 64, 0);
   quickmail_add_body_memory(mailobj, "text/html", "This is a <b>test</b> e-mail.<br/>\nThis mail was sent using <u>libquickmail</u>.", 80, 0);
 /**/
-  quickmail_add_attachment_file(mailobj, "test_quickmail.c");
-  quickmail_add_attachment_file(mailobj, "test_quickmail.cbp");
-  quickmail_add_attachment_memory(mailobj, "test.log", "Test\n123", 8, 0);
+  quickmail_add_attachment_file(mailobj, "test_quickmail.c", NULL);
+  quickmail_add_attachment_file(mailobj, "test_quickmail.cbp", NULL);
+  quickmail_add_attachment_memory(mailobj, "test.log", NULL, "Test\n123", 8, 0);
 /**/
 /*/
   quickmail_fsave(mailobj, stdout);

@@ -1,5 +1,13 @@
 0.1.15
 
+2013-05-28  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* API change: added mimetype parameter to the following functions
+			quickmail_list_attachment_callback_fn
+			quickmail_add_attachment_file
+			quickmail_add_attachment_memory
+			quickmail_add_attachment_custom
+
 2013-05-10  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fix automake to add -DNOCURL when compiling quickmaillight

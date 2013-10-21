@@ -41,7 +41,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 15
+#define LIBQUICKMAIL_VERSION_MICRO 16
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -69,6 +69,11 @@ static const char* default_mime_type = "text/plain";
 
 ////////////////////////////////////////////////////////////////////////
 
+#define DEBUG_ERROR(errmsg)
+static const char* ERRMSG_MEMORY_ALLOCATION_ERROR = "Memory allocation error";
+
+////////////////////////////////////////////////////////////////////////
+
 char* randomize_zeros (char* data)
 {
   //replace all 0s with random digits
@@ -84,8 +89,14 @@ char* randomize_zeros (char* data)
 char* str_append (char** data, const char* newdata)
 {
   //append a string to the end of an existing string
+  char* p;
   int len = (*data ? strlen(*data) : 0);
-  *data = (char*)realloc(*data, len + strlen(newdata) + 1);
+  if ((p = (char*)realloc(*data, len + strlen(newdata) + 1)) == NULL) {
+    free(p);
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
+  *data = p;
   strcpy(*data + len, newdata);
   return *data;
 }
@@ -124,7 +135,10 @@ void email_info_string_list_add (struct email_info_email_list_struct** list, con
   struct email_info_email_list_struct** p = list;
   while (*p)
     p = &(*p)->next;
-  *p = (struct email_info_email_list_struct*)malloc(sizeof(struct email_info_email_list_struct));
+  if ((*p = (struct email_info_email_list_struct*)malloc(sizeof(struct email_info_email_list_struct))) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return;
+  }
   (*p)->data = (data ? strdup(data) : NULL);
   (*p)->next = NULL;
 }
@@ -178,7 +192,10 @@ struct email_info_attachment_list_struct* email_info_attachment_list_add (struct
   struct email_info_attachment_list_struct** p = list;
   while (*p)
     p = &(*p)->next;
-  *p = (struct email_info_attachment_list_struct*)malloc(sizeof(struct email_info_attachment_list_struct));
+  if ((*p = (struct email_info_attachment_list_struct*)malloc(sizeof(struct email_info_attachment_list_struct))) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
   (*p)->filename = strdup(filename ? filename : "UNNAMED");
   (*p)->mimetype = (mimetype ? strdup(mimetype) : NULL);
   (*p)->filedata = filedata;
@@ -328,7 +345,10 @@ void* email_info_attachment_open_memory (void* filedata)
   data = ((struct email_info_attachment_memory_filedata_struct*)filedata);
   if (!data->data)
     return NULL;
-  result = (struct email_info_attachment_memory_handle_struct*)malloc(sizeof(struct email_info_attachment_memory_handle_struct));
+  if ((result = (struct email_info_attachment_memory_handle_struct*)malloc(sizeof(struct email_info_attachment_memory_handle_struct))) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
   result->data = data->data;
   result->datalen = data->datalen;
   result->pos = 0;
@@ -362,7 +382,11 @@ void email_info_attachment_filedata_free_memory (void* filedata)
 
 struct email_info_attachment_list_struct* email_info_attachment_list_add_memory (struct email_info_attachment_list_struct** list, const char* filename, const char* mimetype, char* data, size_t datalen, int mustfree)
 {
-  struct email_info_attachment_memory_filedata_struct* filedata = (struct email_info_attachment_memory_filedata_struct*)malloc(sizeof(struct email_info_attachment_memory_filedata_struct));
+  struct email_info_attachment_memory_filedata_struct* filedata;
+  if ((filedata = (struct email_info_attachment_memory_filedata_struct*)malloc(sizeof(struct email_info_attachment_memory_filedata_struct))) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
   filedata->data = data;
   filedata->datalen = datalen;
   filedata->mustfree = mustfree;
@@ -395,7 +419,11 @@ DLL_EXPORT_LIBQUICKMAIL int quickmail_initialize ()
 DLL_EXPORT_LIBQUICKMAIL quickmail quickmail_create (const char* from, const char* subject)
 {
   int i;
-  struct email_info_struct* mailobj = (struct email_info_struct*)malloc(sizeof(struct email_info_struct));
+  struct email_info_struct* mailobj;
+  if ((mailobj = (struct email_info_struct*)malloc(sizeof(struct email_info_struct))) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
   mailobj->current = 0;
   mailobj->timestamp = time(NULL);
   mailobj->from = (from ? strdup(from) : NULL);
@@ -494,11 +522,17 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* 
 DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj)
 {
   size_t n;
+  char* p;
   char* result = NULL;
   size_t resultlen = 0;
   if (mailobj->bodylist && (mailobj->bodylist->handle = mailobj->bodylist->email_info_attachment_open(mailobj->bodylist->filedata)) != NULL) {
     do {
-      result = (char*)realloc(result, resultlen + BODY_BUFFER_SIZE);
+      if ((p = (char*)realloc(result, resultlen + BODY_BUFFER_SIZE)) == NULL) {
+        free(result);
+        DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+        break;
+      }
+      result = p;
       if ((n = mailobj->bodylist->email_info_attachment_read(mailobj->bodylist->handle, result + resultlen, BODY_BUFFER_SIZE)) > 0)
         resultlen += n;
     } while (n > 0);
@@ -697,8 +731,10 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         }
         if (mailobj->buflen == 0 && mailobj->current_attachment && mailobj->current_attachment->handle) {
           //read body data
-          mailobj->buf = malloc(BODY_BUFFER_SIZE);
-          if ((mailobj->buflen = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, mailobj->buf, BODY_BUFFER_SIZE)) <= 0) {
+          if ((mailobj->buf = malloc(BODY_BUFFER_SIZE)) == NULL) {
+            DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+          }
+          if (mailobj->buf == NULL || (mailobj->buflen = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, mailobj->buf, BODY_BUFFER_SIZE)) <= 0) {
             //end of file
             free(mailobj->buf);
             mailobj->buflen = 0;
@@ -758,30 +794,33 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
           int mimelinepos = 0;
           unsigned char igroup[3] = {0, 0, 0};
           unsigned char ogroup[4];
-          mailobj->buf = (char*)malloc(MIME_LINE_WIDTH + NEWLINELENGTH + 1);
           mailobj->buflen = 0;
-          while (mimelinepos < MIME_LINE_WIDTH && (n = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, igroup, 3)) > 0) {
-            //code data
-            ogroup[0] = mailobj->dtable[igroup[0] >> 2];
-            ogroup[1] = mailobj->dtable[((igroup[0] & 3) << 4) | (igroup[1] >> 4)];
-            ogroup[2] = mailobj->dtable[((igroup[1] & 0xF) << 2) | (igroup[2] >> 6)];
-            ogroup[3] = mailobj->dtable[igroup[2] & 0x3F];
-            //padd with "=" characters if less than 3 characters were read
-            if (n < 3) {
-              ogroup[3] = '=';
-              if (n < 2)
-                ogroup[2] = '=';
+          if ((mailobj->buf = (char*)malloc(MIME_LINE_WIDTH + NEWLINELENGTH + 1)) == NULL) {
+            DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+            n = 0;
+          } else {
+            while (mimelinepos < MIME_LINE_WIDTH && (n = mailobj->current_attachment->email_info_attachment_read(mailobj->current_attachment->handle, igroup, 3)) > 0) {
+              //code data
+              ogroup[0] = mailobj->dtable[igroup[0] >> 2];
+              ogroup[1] = mailobj->dtable[((igroup[0] & 3) << 4) | (igroup[1] >> 4)];
+              ogroup[2] = mailobj->dtable[((igroup[1] & 0xF) << 2) | (igroup[2] >> 6)];
+              ogroup[3] = mailobj->dtable[igroup[2] & 0x3F];
+              //padd with "=" characters if less than 3 characters were read
+              if (n < 3) {
+                ogroup[3] = '=';
+                if (n < 2)
+                  ogroup[2] = '=';
+              }
+              memcpy(mailobj->buf + mimelinepos, ogroup, 4);
+              mailobj->buflen += 4;
+              mimelinepos += 4;
             }
-            memcpy(mailobj->buf + mimelinepos, ogroup, 4);
-            mailobj->buflen += 4;
-            mimelinepos += 4;
+            if (mimelinepos > 0) {
+              memcpy(mailobj->buf + mimelinepos, NEWLINE, NEWLINELENGTH);
+              mailobj->buflen += NEWLINELENGTH;
+            }
           }
-          if (mimelinepos > 0) {
-            memcpy(mailobj->buf + mimelinepos, NEWLINE, NEWLINELENGTH);
-            mailobj->buflen += NEWLINELENGTH;
-          }
-          if (n <= 0)
-          {
+          if (n <= 0) {
             //end of file
             if (mailobj->current_attachment->email_info_attachment_close)
               mailobj->current_attachment->email_info_attachment_close(mailobj->current_attachment->handle);
@@ -840,7 +879,11 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
 char* add_angle_brackets (const char* data)
 {
   size_t datalen = strlen(data);
-  char* result = (char*)malloc(datalen + 3);
+  char* result;
+  if ((result = (char*)malloc(datalen + 3)) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
   result[0] = '<';
   memcpy(result + 1, data, datalen);
   result[datalen + 1] = '>';
@@ -860,8 +903,12 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     struct curl_slist *recipients = NULL;
     struct email_info_email_list_struct* listentry;
     //set destination URL
+    char* addr;
     size_t len = strlen(smtpserver) + 14;
-    char* addr = (char*)malloc(len);
+    if ((addr = (char*)malloc(len)) == NULL) {
+      DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+      return ERRMSG_MEMORY_ALLOCATION_ERROR;
+    }
     snprintf(addr, len, "smtp://%s:%u", smtpserver, smtpport);
     curl_easy_setopt(curl, CURLOPT_URL, addr);
     free(addr);
@@ -960,8 +1007,16 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
           int outpos = 0;
           size_t usernamelen = (username ? strlen(username) : 0);
           size_t passwordlen = (password ? strlen(password) : 0);
-          char* auth = (char*)malloc(usernamelen + passwordlen + 4);
-          char* base64auth = (char*)malloc(((usernamelen + passwordlen + 2) + 2) / 3 * 4 + 1);
+          char* auth;
+          char* base64auth;
+          if ((auth = (char*)malloc(usernamelen + passwordlen + 4)) == NULL) {
+            DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+            return ERRMSG_MEMORY_ALLOCATION_ERROR;
+          }
+          if ((base64auth = (char*)malloc(((usernamelen + passwordlen + 2) + 2) / 3 * 4 + 1)) == NULL) {
+            DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+            return ERRMSG_MEMORY_ALLOCATION_ERROR;
+          }
           //leave the authorization identity empty to indicate it's the same the as authentication identity
           auth[0] = 0;
           len = 1;

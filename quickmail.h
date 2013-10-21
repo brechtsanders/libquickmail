@@ -108,7 +108,7 @@ DLL_EXPORT_LIBQUICKMAIL int quickmail_initialize ();
 /*! \brief create a new quickmail object
  * \param  from        sender e-mail address
  * \param  subject     e-mail subject
- * \return quickmail object
+ * \return quickmail object or NULL on error
  */
 DLL_EXPORT_LIBQUICKMAIL quickmail quickmail_create (const char* from, const char* subject);
 
@@ -174,7 +174,7 @@ DLL_EXPORT_LIBQUICKMAIL void quickmail_set_body (quickmail mailobj, const char* 
 /*! \brief set the body of a quickmail object
  * any existing bodies will be removed and a single plain text body will be added
  * \param  mailobj     quickmail object
- * \return e-mail body (caller must free result)
+ * \return e-mail body or NULL on error (caller must free result)
  */
 DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj);
 

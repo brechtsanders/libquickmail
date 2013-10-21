@@ -1,3 +1,9 @@
+0.1.16
+
+2013-10-21  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added code to catch failing malloc/realloc when out of memory
+
 0.1.15
 
 2013-05-28  Brecht Sanders  <brechtsanders@users.sourceforge.net>

@@ -23,6 +23,13 @@
 #define va_copy(dst,src) ((dst) = (src))
 #endif
 
+////////////////////////////////////////////////////////////////////////
+
+#define DEBUG_ERROR(errmsg)
+static const char* ERRMSG_MEMORY_ALLOCATION_ERROR = "Memory allocation error";
+
+////////////////////////////////////////////////////////////////////////
+
 SOCKET socket_open (const char* smtpserver, unsigned int smtpport, char** errmsg)
 {
   struct in_addr ipv4addr;
@@ -109,18 +116,27 @@ int socket_data_waiting (SOCKET sock, int timeoutseconds)
 char* socket_receive_smtp (SOCKET sock)
 {
   char* buf = NULL;
-  int size = READ_BUFFER_CHUNK_SIZE;
+  int bufsize = READ_BUFFER_CHUNK_SIZE;
   int pos = 0;
   int linestart;
   int n;
-  buf = (char*)malloc(size);
+  if ((buf = (char*)malloc(bufsize)) == NULL) {
+    DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+    return NULL;
+  }
   do {
     //insert line break if response is multiple lines
     if (pos > 0) {
       buf[pos++] = '\n';
-      if (pos >= size) {
-        buf = (char*)realloc(buf, size + READ_BUFFER_CHUNK_SIZE);
-        size += READ_BUFFER_CHUNK_SIZE;
+      if (pos >= bufsize) {
+        char* newbuf;
+        if ((newbuf = (char*)realloc(buf, bufsize + READ_BUFFER_CHUNK_SIZE)) == NULL) {
+          free(buf);
+          DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+          return NULL;
+        }
+        buf = newbuf;
+        bufsize += READ_BUFFER_CHUNK_SIZE;
       }
     }
     //add each character read until it is a line break
@@ -134,9 +150,15 @@ char* socket_receive_smtp (SOCKET sock)
       if (buf[pos] == '\n')
         break;
       //enlarge buffer if necessary
-      if (++pos >= size) {
-        buf = (char*)realloc(buf, size + READ_BUFFER_CHUNK_SIZE);
-        size += READ_BUFFER_CHUNK_SIZE;
+      if (++pos >= bufsize) {
+        char* newbuf;
+        if ((newbuf = (char*)realloc(buf, bufsize + READ_BUFFER_CHUNK_SIZE)) == NULL) {
+          free(buf);
+          DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
+          return NULL;
+        }
+        buf = newbuf;
+        bufsize += READ_BUFFER_CHUNK_SIZE;
       }
     }
     //exit on error (e.g. if connection is closed)
@@ -182,8 +204,9 @@ int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
     cmdlen = vsnprintf(NULL, 0, template, aq);
     va_end(aq);
     if ((cmd = (char*)malloc(cmdlen + 3)) == NULL) {
+      DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
       if (debuglog)
-        fprintf(debuglog, "Memory allocation error");
+        fprintf(debuglog, ERRMSG_MEMORY_ALLOCATION_ERROR);
       va_end(ap);
       return 999;
     }

@@ -59,22 +59,23 @@
 void show_help()
 {
   printf(
-    "Usage:  quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
+    "Usage:  quickmail {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
     "Parameters:\n" \
-    "  -h server      \thostname or IP address of SMTP server\n" \
-    "  -p port        \tTCP port to use for SMTP connection (default is 25)\n" \
-    "  -u username    \tusername to use for SMTP authentication\n" \
-    "  -w password    \tpassword to use for SMTP authentication\n" \
-    "  -f email       \tFrom e-mail address\n" \
-    "  -t email       \tTo e-mail address (multiple -t can be specified)\n" \
-    "  -c email       \tCc e-mail address (multiple -c can be specified)\n" \
-    "  -b email       \tBcc e-mail address (multiple -b can be specified)\n" \
-    "  -s subject     \tSubject\n" \
-    "  -m mimetype    \tMIME used for the body (must be specified before -d)\n" \
-    "  -d body        \tbody, if not specified will be read from standard input\n" \
-    "  -a file        \tfile to attach (multiple -a can be specified)\n" \
-    "  -v             \tverbose mode\n" \
-    "  -?             \tshow help\n" \
+    "  -h server   \thostname or IP address of SMTP server\n" \
+    "  -o filename \tname of file to dump the mail content to (- for stdout)\n" \
+    "  -p port     \tTCP port to use for SMTP connection (default is 25)\n" \
+    "  -u username \tusername to use for SMTP authentication\n" \
+    "  -w password \tpassword to use for SMTP authentication\n" \
+    "  -f email    \tFrom e-mail address\n" \
+    "  -t email    \tTo e-mail address (multiple -t can be specified)\n" \
+    "  -c email    \tCc e-mail address (multiple -c can be specified)\n" \
+    "  -b email    \tBcc e-mail address (multiple -b can be specified)\n" \
+    "  -s subject  \tSubject\n" \
+    "  -m mimetype \tMIME used for the body (must be specified before -d)\n" \
+    "  -d body     \tbody, if not specified will be read from standard input\n" \
+    "  -a file     \tfile to attach (multiple -a can be specified)\n" \
+    "  -v          \tverbose mode\n" \
+    "  -?          \tshow help\n" \
     "\n"
   );
 }
@@ -87,12 +88,13 @@ size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
 int main (int argc, char *argv[])
 {
   //default values
+  FILE* output_file = NULL;
   const char* smtp_server = NULL;
+  int smtp_port = 25;
   const char* smtp_username = NULL;
   const char* smtp_password = NULL;
   const char* mime_type = NULL;
   char* body = NULL;
-  int smtp_port = 25;
 
   //show version
 #ifdef NOCURL
@@ -120,6 +122,17 @@ int main (int argc, char *argv[])
           case '?' :
             show_help();
             return 0;
+          case 'o' :
+            if (argv[i][2])
+              param = argv[i] + 2;
+            else if (i + 1 < argc && argv[i + 1])
+              param = argv[++i];
+            if (!param || !*param || strcmp(param, "-") == 0)
+              output_file = stdout;
+            else
+              if ((output_file = fopen(param, "wb")) == NULL)
+                fprintf(stderr, "Error writing to file: %s\n", param);
+            break;
           case 'h' :
             if (argv[i][2])
               param = argv[i] + 2;
@@ -255,7 +268,7 @@ int main (int argc, char *argv[])
         }
       }
     }
-    if (paramerror || !smtp_server || !quickmail_get_from(mailobj)) {
+    if (paramerror || (!smtp_server && !output_file) || !quickmail_get_from(mailobj)) {
       fprintf(stderr, "Invalid command line parameters\n");
       show_help();
       return 1;
@@ -274,10 +287,16 @@ int main (int argc, char *argv[])
   mime_type = NULL;
   //send e-mail
   int status = 0;
-  const char* errmsg;
-  if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, smtp_username, smtp_password)) != NULL) {
-    status = 1;
-    fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
+  if (smtp_server) {
+    const char* errmsg;
+    if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, smtp_username, smtp_password)) != NULL) {
+      status = 1;
+      fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
+    }
+  }
+  //write e-mail body
+  if (output_file) {
+    quickmail_fsave(mailobj, output_file);
   }
   //clean up
   quickmail_destroy(mailobj);

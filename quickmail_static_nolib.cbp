@@ -11,6 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters='-o - -f user@test.com -t somebody@mail.com -s &quot;Test E-mail&quot; -D &quot;0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789&quot;' />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

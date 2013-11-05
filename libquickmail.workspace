@@ -13,5 +13,6 @@
 		<Project filename="test_nocurl.cbp" />
 		<Project filename="quickmail_static.cbp" />
 		<Project filename="quickmail_static_nolib.cbp" />
+		<Project filename="quickmail_shared.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

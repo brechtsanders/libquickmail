@@ -100,7 +100,10 @@ int main (int argc, char *argv[])
 #ifdef NOCURL
   printf("quickmail %s\n", quickmail_get_version());
 #else
-  printf("quickmail %s - with libcurl:\n%s\n", quickmail_get_version(), curl_version());
+  {
+    curl_version_info_data* curlversion = curl_version_info(CURLVERSION_NOW);
+    printf("quickmail %s (with libcurl %s)\n", quickmail_get_version(), (curlversion ? curlversion->version : curl_version()));
+  }
 #endif
   //initialize mail object
   quickmail_initialize();

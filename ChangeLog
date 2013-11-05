@@ -1,3 +1,9 @@
+0.1.17
+
+2013-11-05  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed line breaks in source files (UNIX EOL)
+
 0.1.16
 
 2013-10-21  Brecht Sanders  <brechtsanders@users.sourceforge.net>

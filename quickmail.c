@@ -650,7 +650,14 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION NEWLINE);
       if (mailobj->timestamp != 0) {
         char timestamptext[32];
-        if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S +0000", gmtime(&mailobj->timestamp))) {
+#ifndef _WIN32
+        if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S %z", localtime(&mailobj->timestamp))) {
+#else
+        if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S", localtime(&mailobj->timestamp))) {
+          TIME_ZONE_INFORMATION tzinfo;
+          if (GetTimeZoneInformation(&tzinfo) != TIME_ZONE_ID_INVALID)
+            sprintf(timestamptext + strlen(timestamptext), " %c%02i%02i\n", (tzinfo.Bias > 0 ? '-' : '+'), (int)-tzinfo.Bias / 60, (int)-tzinfo.Bias % 60);
+#endif
           str_append(p, "Date: ");
           str_append(p, timestamptext);
           str_append(p, NEWLINE);

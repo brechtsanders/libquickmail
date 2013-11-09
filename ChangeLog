@@ -1,5 +1,9 @@
 0.1.17
 
+2013-11-10  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* Fix Date header to show local time with proper UTC offset
+
 2013-11-05  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fixed line breaks in source files (UNIX EOL)

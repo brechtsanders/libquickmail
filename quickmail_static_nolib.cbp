@@ -77,6 +77,7 @@
 				<Option object_output="obj/Release32/" />
 				<Option type="1" />
 				<Option compiler="mingw32" />
+				<Option parameters='-o - -f me@mail.com -t you@mail.com -s &quot;Test&quot; -d &quot;Body&quot;' />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>

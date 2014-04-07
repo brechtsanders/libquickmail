@@ -660,7 +660,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         else if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S", localtime(&mailobj->timestamp))) {
           TIME_ZONE_INFORMATION tzinfo;
           if (GetTimeZoneInformation(&tzinfo) != TIME_ZONE_ID_INVALID)
-            sprintf(timestamptext + strlen(timestamptext), " %c%02i%02i\n", (tzinfo.Bias > 0 ? '-' : '+'), (int)-tzinfo.Bias / 60, (int)-tzinfo.Bias % 60);
+            sprintf(timestamptext + strlen(timestamptext), " %c%02i%02i", (tzinfo.Bias > 0 ? '-' : '+'), (int)-tzinfo.Bias / 60, (int)-tzinfo.Bias % 60);
           str_append(p, "Date: ");
           str_append(p, timestamptext);
           str_append(p, NEWLINE);

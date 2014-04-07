@@ -1,5 +1,9 @@
 0.1.18
 
+2014-04-07  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed additional line break after Date header
+	
 0.1.17
 
 2013-11-10  Brecht Sanders  <brechtsanders@users.sourceforge.net>

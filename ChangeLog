@@ -1,5 +1,9 @@
 0.1.19
 
+2015-04-29  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed curl error "VRFY command is disabled" (Andreas Baumann)
+
 0.1.18
 
 2014-04-07  Brecht Sanders  <brechtsanders@users.sourceforge.net>

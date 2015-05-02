@@ -974,6 +974,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
     //set callback function for getting message body
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, quickmail_get_data);
     curl_easy_setopt(curl, CURLOPT_READDATA, mailobj);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L); //set CURLOPT_UPLOAD to 1 to not use VRFY and other unneeded commands
     //enable debugging if requested
     if (mailobj->debuglog) {
       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);

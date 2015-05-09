@@ -1,3 +1,8 @@
+0.1.20
+
+2015-05-09  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed configure.ac for MinGW static+shared build
 0.1.19
 
 2015-04-29  Brecht Sanders  <brechtsanders@users.sourceforge.net>

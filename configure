@@ -3134,7 +3134,6 @@ test -z "$OBJDUMP" && OBJDUMP=objdump
 
 
 #LT_INIT
-
 case `pwd` in
   *\ * | *\	*)
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Libtool does not cope well with whitespace in \`pwd\`" >&5
@@ -7812,14 +7811,7 @@ done
 
 
 # Set options
-
-
-
-        enable_dlopen=no
-
-
-
-            # Check whether --enable-shared was given.
+# Check whether --enable-shared was given.
 if test "${enable_shared+set}" = set; then :
   enableval=$enable_shared; p=${PACKAGE-default}
     case $enableval in
@@ -7848,9 +7840,7 @@ fi
 
 
 
-
-
-  # Check whether --enable-static was given.
+# Check whether --enable-static was given.
 if test "${enable_static+set}" = set; then :
   enableval=$enable_static; p=${PACKAGE-default}
     case $enableval in
@@ -7876,6 +7866,13 @@ fi
 
 
 
+
+
+
+
+
+
+        enable_dlopen=no
 
 
 
@@ -12098,6 +12095,8 @@ CC=$lt_save_CC
 
 
 # Only expand once:
+
+
 
 
 

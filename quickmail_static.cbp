@@ -91,23 +91,16 @@
 		<Linker>
 			<Add option="-static" />
 			<Add option="-Wl,--as-needed" />
+			<Add option="`pkg-config --static --libs libssh2`" />
+			<Add option="`pkg-config --static --libs libcurl`" />
 			<Add library="libquickmail" />
-			<Add library="curl" />
-			<Add library="idn" />
 			<Add library="intl" />
-			<Add library="iconv" />
-			<Add library="ssh2" />
-			<Add library="gcrypt" />
-			<Add library="gpg-error" />
-			<Add library="rtmp" />
-			<Add library="ssl" />
-			<Add library="crypto" />
-			<Add library="z" />
-			<Add library="gdi32" />
+			<Add library="idn" />
+			<Add library="nettle" />
+			<Add library="tasn1" />
 			<Add library="wldap32" />
-			<Add library="ws2_32" />
 			<Add library="winmm" />
-			<Add library="gnutls" />
+			<Add library="gcrypt" />
 		</Linker>
 		<Unit filename="quickmailprog.c">
 			<Option compilerVar="CC" />

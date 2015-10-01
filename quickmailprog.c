@@ -59,7 +59,11 @@
 void show_help()
 {
   printf(
-    "Usage:  quickmail {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
+    "Usage:  quickmail"
+#ifdef NOCURL
+    "light"
+#endif
+    " {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
     "Parameters:\n" \
     "  -h server   \thostname or IP address of SMTP server\n" \
     "  -o filename \tname of file to dump the mail content to (- for stdout)\n" \

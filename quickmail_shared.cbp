@@ -90,7 +90,7 @@
 		</Compiler>
 		<Linker>
 			<Add option="`pkg-config --libs libcurl`" />
-			<Add library="libquickmail" />
+			<Add option="-llibquickmail" />
 		</Linker>
 		<Unit filename="quickmailprog.c">
 			<Option compilerVar="CC" />

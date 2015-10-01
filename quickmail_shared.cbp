@@ -89,8 +89,8 @@
 			<Add option="-DCURL_STATICLIB" />
 		</Compiler>
 		<Linker>
+			<Add option="`pkg-config --libs libcurl`" />
 			<Add library="libquickmail" />
-			<Add library="curl" />
 		</Linker>
 		<Unit filename="quickmailprog.c">
 			<Option compilerVar="CC" />

@@ -95,12 +95,16 @@
 			<Add option="`pkg-config --static --libs libcurl`" />
 			<Add library="libquickmail" />
 			<Add library="intl" />
-			<Add library="idn" />
+			<Add library="iconv" />
+			<Add library="gdi32" />
+			<Add library="wldap32" />
+			<Add library="ws2_32" />
+			<Add library="winmm" />
+			<Add library="gmp" />
 			<Add library="nettle" />
 			<Add library="tasn1" />
-			<Add library="wldap32" />
-			<Add library="winmm" />
 			<Add library="gcrypt" />
+			<Add library="idn" />
 		</Linker>
 		<Unit filename="quickmailprog.c">
 			<Option compilerVar="CC" />

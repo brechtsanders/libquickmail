@@ -529,6 +529,7 @@ DLL_EXPORT_LIBQUICKMAIL char* quickmail_get_body (quickmail mailobj)
     do {
       if ((p = (char*)realloc(result, resultlen + BODY_BUFFER_SIZE)) == NULL) {
         free(result);
+        result = NULL;
         DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
         break;
       }
@@ -646,7 +647,6 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       char* s;
       //generate header part
       char** p = &mailobj->buf;
-      mailobj->buf = NULL;
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION NEWLINE);
       if (mailobj->timestamp != 0) {
         char timestamptext[32];
@@ -709,7 +709,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         str_append(p, mailobj->mime_boundary_body);
         str_append(p, NEWLINE);
       }
-      mailobj->buflen = strlen(mailobj->buf);
+      mailobj->buflen = (mailobj->buf ? strlen(mailobj->buf) : 0);
       mailobj->current++;
     }
     if (mailobj->buflen == 0 && mailobj->current == MAILPART_BODY) {
@@ -737,7 +737,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             mailobj->buf = str_append(&mailobj->buf, "Content-Type: ");
             mailobj->buf = str_append(&mailobj->buf, (mailobj->bodylist && mailobj->current_attachment->filename ? mailobj->current_attachment->filename : default_mime_type));
             mailobj->buf = str_append(&mailobj->buf, NEWLINE "Content-Transfer-Encoding: 8bit" NEWLINE "Content-Disposition: inline" NEWLINE NEWLINE);
-            mailobj->buflen = strlen(mailobj->buf);
+            mailobj->buflen = (mailobj->buf ? strlen(mailobj->buf) : 0);
           }
         }
         if (mailobj->buflen == 0 && mailobj->current_attachment && mailobj->current_attachment->handle) {

@@ -26,6 +26,7 @@
                - multiple To/Cc/Bcc recipients
                - multiple attachments without size limitation
                - specifying the MIME-type to use for the message body
+               - multiple alternative bodies
     \section SYNOPSIS synopsis
               quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v] [-?]
     \section OPTIONS options

@@ -2,7 +2,8 @@
 
 2015-12-11  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
-	* fixed base64 padding bug (reported by Wojtek Kunda )
+	* fixed base64 padding bug (reported by Wojtek Kunda)
+	* fixed missing end quote in body separator (reported by Wojtek Kunda)
 
 0.1.20
 

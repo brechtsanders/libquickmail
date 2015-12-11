@@ -38,9 +38,9 @@
                -t email       To e-mail address (multiple -t can be specified)
                -c email       Cc e-mail address (multiple -c can be specified)
                -b email       Bcc e-mail address (multiple -b can be specified)
-               -s subject     Subject
+               -s subject     subject
                -m mimetype    MIME used for the body (must be specified before -d)
-               -d body        Body, if not specified will be read from standard input
+               -d body        body, if not specified will be read from standard input
                -a file        file to attach (multiple -a can be specified)
                -v             verbose mode
                -?             show help
@@ -75,7 +75,7 @@ void show_help()
     "  -c email    \tCc e-mail address (multiple -c can be specified)\n" \
     "  -b email    \tBcc e-mail address (multiple -b can be specified)\n" \
     "  -s subject  \tSubject\n" \
-    "  -m mimetype \tMIME used for the body (must be specified before -d)\n" \
+    "  -m mimetype \tMIME used for the next body (must be specified before -d)\n" \
     "  -d body     \tbody, if not specified will be read from standard input\n" \
     "  -a file     \tfile to attach (multiple -a can be specified)\n" \
     "  -v          \tverbose mode\n" \
@@ -251,10 +251,14 @@ int main (int argc, char *argv[])
               param = argv[i] + 2;
             else if (i + 1 < argc && argv[i + 1])
               param = argv[++i];
-            if (!param)
+            if (!param) {
               paramerror++;
-            else if (strcmp(param, "-") != 0)
+            } else if (strcmp(param, "-") == 0) {
+              body = NULL;
+            } else {
               body = param;
+              quickmail_add_body_memory(mailobj, mime_type, body, strlen(body), 0);
+            }
             break;
           case 'a' :
             if (argv[i][2])
@@ -286,9 +290,7 @@ int main (int argc, char *argv[])
     }
   }
   //read body from standard input if not given
-  if (body) {
-    quickmail_add_body_memory(mailobj, mime_type, body, strlen(body), 0);
-  } else {
+  if (!body) {
     quickmail_add_body_custom(mailobj, mime_type, NULL, NULL, email_info_attachment_read_stdin, NULL, NULL);
   }
   mime_type = NULL;

@@ -720,6 +720,7 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             if ((mailobj->current_attachment->handle = mailobj->current_attachment->email_info_attachment_open(mailobj->current_attachment->filedata)) != NULL) {
               break;
             }
+            /////to do: notify/log the file could not be opened
             mailobj->current_attachment = mailobj->current_attachment->next;
           }
           if (!mailobj->current_attachment) {

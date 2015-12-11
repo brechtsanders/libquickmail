@@ -4,6 +4,7 @@
 
 	* fixed base64 padding bug (reported by Wojtek Kunda)
 	* fixed missing end quote in body separator (reported by Wojtek Kunda)
+	* added multi-body support to command line application
 
 0.1.20
 

@@ -1048,9 +1048,9 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
             base64auth[outpos + 2] = mailobj->dtable[((auth[inpos + 1] & 0xF) << 2) | (auth[inpos + 2] >> 6)];
             base64auth[outpos + 3] = mailobj->dtable[auth[inpos + 2] & 0x3F];
             //padd with "=" characters if less than 3 characters were read
-            if (inpos + 1 >= len) {
+            if (inpos + 2 >= len) {
               base64auth[outpos + 3] = '=';
-              if (inpos + 2 >= len)
+              if (inpos + 1 >= len)
                 base64auth[outpos + 2] = '=';
             }
             //advance to next position

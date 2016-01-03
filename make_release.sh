@@ -7,7 +7,7 @@ FILELIST='*.c *.h *.am *.in README AUTHORS COPYING License.txt NEWS ChangeLog IN
 
 # create tarball
 echo Creating tarball: $TARBALL
-rm -rf $BASENAME &> /dev/null
+rm -rf /tmp/$BASENAME &> /dev/null
 mkdir /tmp/$BASENAME
 cp -rf $FILELIST /tmp/$BASENAME/
 rm $TARBALL &> /dev/null
@@ -15,5 +15,5 @@ pushd /tmp &> /dev/null
 tar cfJ $TARBALL $BASENAME --remove-files
 popd &> /dev/null
 
-#clean  up
+#clean up
 rm -rf /tmp/$BASENAME &> /dev/null

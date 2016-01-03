@@ -17,4 +17,6 @@ autoheader --force &&
 # create Makefile.in from Makefile.am
 automake --force-missing --add-missing &&
 
+#autoreconf --force --install &&
+
 echo Done

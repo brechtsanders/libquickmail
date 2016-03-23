@@ -904,7 +904,10 @@ char* add_angle_brackets (const char* data)
 }
 #endif
 
-DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
+#define QUICKMAIL_PROT_SMTP  1
+#define QUICKMAIL_PROT_SMTPS 2
+
+const char* quickmail_protocol_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, int protocol, const char* username, const char* password)
 {
 #ifndef NOCURL
   //libcurl based sending
@@ -921,7 +924,7 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
       DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
       return ERRMSG_MEMORY_ALLOCATION_ERROR;
     }
-    snprintf(addr, len, "smtp://%s:%u", smtpserver, smtpport);
+    snprintf(addr, len, "%s://%s:%u", (protocol == QUICKMAIL_PROT_SMTPS ? "smtps" : "smtp"), smtpserver, smtpport);
     curl_easy_setopt(curl, CURLOPT_URL, addr);
     free(addr);
     //try Transport Layer Security (TLS), but continue anyway if it fails
@@ -995,6 +998,10 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   struct email_info_email_list_struct* listentry;
   char local_hostname[64];
   int statuscode;
+  //SMTPS not supported without libcurl
+  if (protocol == QUICKMAIL_PROT_SMTPS) {
+    return "SMTPS not supported";
+  }
   //determine local host name
   if (gethostname(local_hostname, sizeof(local_hostname)) != 0)
 		strcpy(local_hostname, "localhost");
@@ -1120,4 +1127,13 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const cha
   socket_close(sock);
   return errmsg;
 #endif
+}
+
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
+{
+  return quickmail_protocol_send(mailobj, smtpserver, smtpport, QUICKMAIL_PROT_SMTP, username, password);
+}
+DLL_EXPORT_LIBQUICKMAIL const char* quickmail_send_secure (quickmail mailobj, const char* smtpserver, unsigned int smtpport, const char* username, const char* password)
+{
+  return quickmail_protocol_send(mailobj, smtpserver, smtpport, QUICKMAIL_PROT_SMTPS, username, password);
 }

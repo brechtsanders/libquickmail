@@ -1,5 +1,9 @@
 0.1.22
 
+2016-03-23  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added quickmail_send_secure() for SMTPS support (libcurl only)
+
 0.1.21
 
 2015-12-11  Brecht Sanders  <brechtsanders@users.sourceforge.net>

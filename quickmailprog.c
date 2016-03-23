@@ -69,6 +69,7 @@ void show_help()
     "  -h server   \thostname or IP address of SMTP server\n" \
     "  -o filename \tname of file to dump the mail content to (- for stdout)\n" \
     "  -p port     \tTCP port to use for SMTP connection (default is 25)\n" \
+    "  -l          \tUse SMTPS (make sure to also set the port, typically 465)\n" \
     "  -u username \tusername to use for SMTP authentication\n" \
     "  -w password \tpassword to use for SMTP authentication\n" \
     "  -f email    \tFrom e-mail address\n" \
@@ -96,6 +97,7 @@ int main (int argc, char *argv[])
   FILE* output_file = NULL;
   const char* smtp_server = NULL;
   int smtp_port = 25;
+  int smtps = 0;
   const char* smtp_username = NULL;
   const char* smtp_password = NULL;
   const char* mime_type = NULL;
@@ -160,6 +162,9 @@ int main (int argc, char *argv[])
               paramerror++;
             else
               smtp_port = atoi(param);
+            break;
+          case 'l' :
+            smtps = 1;
             break;
           case 'u' :
             if (argv[i][2])
@@ -299,7 +304,11 @@ int main (int argc, char *argv[])
   int status = 0;
   if (smtp_server) {
     const char* errmsg;
-    if ((errmsg = quickmail_send(mailobj, smtp_server, smtp_port, smtp_username, smtp_password)) != NULL) {
+    if (!smtps)
+      errmsg = quickmail_send(mailobj, smtp_server, smtp_port, smtp_username, smtp_password);
+    else
+      errmsg = quickmail_send_secure(mailobj, smtp_server, smtp_port, smtp_username, smtp_password);
+    if (errmsg) {
       status = 1;
       fprintf(stderr, "Error sending e-mail: %s\n", errmsg);
     }

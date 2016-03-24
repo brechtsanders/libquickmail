@@ -64,24 +64,26 @@ void show_help()
 #ifdef NOCURL
     "light"
 #endif
-    " {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n" \
-    "Parameters:\n" \
-    "  -h server   \thostname or IP address of SMTP server\n" \
-    "  -o filename \tname of file to dump the mail content to (- for stdout)\n" \
-    "  -p port     \tTCP port to use for SMTP connection (default is 25)\n" \
-    "  -l          \tUse SMTPS (make sure to also set the port, typically 465)\n" \
-    "  -u username \tusername to use for SMTP authentication\n" \
-    "  -w password \tpassword to use for SMTP authentication\n" \
-    "  -f email    \tFrom e-mail address\n" \
-    "  -t email    \tTo e-mail address (multiple -t can be specified)\n" \
-    "  -c email    \tCc e-mail address (multiple -c can be specified)\n" \
-    "  -b email    \tBcc e-mail address (multiple -b can be specified)\n" \
-    "  -s subject  \tSubject\n" \
-    "  -m mimetype \tMIME used for the next body (must be specified before -d)\n" \
-    "  -d body     \tbody, if not specified will be read from standard input\n" \
-    "  -a file     \tfile to attach (multiple -a can be specified)\n" \
-    "  -v          \tverbose mode\n" \
-    "  -?          \tshow help\n" \
+    " {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n"
+    "Parameters:\n"
+    "  -h server   \thostname or IP address of SMTP server\n"
+    "  -o filename \tname of file to dump the mail content to (- for stdout)\n"
+    "  -p port     \tTCP port to use for SMTP connection (default is 25)\n"
+#ifndef NOCURL
+    "  -l          \tUse SMTPS (make sure to also set the port, typically 465)\n"
+#endif
+    "  -u username \tusername to use for SMTP authentication\n"
+    "  -w password \tpassword to use for SMTP authentication\n"
+    "  -f email    \tFrom e-mail address\n"
+    "  -t email    \tTo e-mail address (multiple -t can be specified)\n"
+    "  -c email    \tCc e-mail address (multiple -c can be specified)\n"
+    "  -b email    \tBcc e-mail address (multiple -b can be specified)\n"
+    "  -s subject  \tSubject\n"
+    "  -m mimetype \tMIME used for the next body (must be specified before -d)\n"
+    "  -d body     \tbody, if not specified will be read from standard input\n"
+    "  -a file     \tfile to attach (multiple -a can be specified)\n"
+    "  -v          \tverbose mode\n"
+    "  -?          \tshow help\n"
     "\n"
   );
 }
@@ -163,9 +165,11 @@ int main (int argc, char *argv[])
             else
               smtp_port = atoi(param);
             break;
+#ifndef NOCURL
           case 'l' :
             smtps = 1;
             break;
+#endif
           case 'u' :
             if (argv[i][2])
               param = argv[i] + 2;

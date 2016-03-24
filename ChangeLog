@@ -1,3 +1,9 @@
+0.1.23
+
+2016-03-23  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* removed -l from light command line application (without libcurl)
+
 0.1.22
 
 2016-03-23  Brecht Sanders  <brechtsanders@users.sourceforge.net>

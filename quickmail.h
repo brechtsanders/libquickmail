@@ -1,9 +1,3 @@
-/*! \file      quickmail.h
- *  \brief     header file for libquickmail
- *  \author    Brecht Sanders
- *  \date      2012-2016
- *  \copyright GPL
- */
 /*
     This file is part of libquickmail.
 
@@ -21,12 +15,19 @@
     along with libquickmail.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*! \file      quickmail.h
+ *  \brief     header file for libquickmail
+ *  \author    Brecht Sanders
+ *  \date      2012-2016
+ *  \copyright GPL
+ */
+
 #ifndef __INCLUDED_QUICKMAIL_H
 #define __INCLUDED_QUICKMAIL_H
 
 #include <stdio.h>
 
-/*! \brief define for exporting/importing functions in/from shared library */
+/*! \cond PRIVATE */
 #ifdef _WIN32
 #if defined(BUILD_QUICKMAIL_DLL)
 #define DLL_EXPORT_LIBQUICKMAIL __declspec(dllexport)
@@ -38,6 +39,7 @@
 #else
 #define DLL_EXPORT_LIBQUICKMAIL
 #endif
+/*! \endcond */
 
 #ifdef __cplusplus
 extern "C" {

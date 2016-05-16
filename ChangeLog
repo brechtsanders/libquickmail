@@ -1,5 +1,9 @@
 0.1.23
 
+2016-05-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* move variable declaration to beginning of cose block for older C compilers
+
 2016-03-23  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* removed -l from light command line application (without libcurl)

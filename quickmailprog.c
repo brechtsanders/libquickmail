@@ -95,7 +95,10 @@ size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
 
 int main (int argc, char *argv[])
 {
+  quickmail mailobj;
+
   //default values
+  int status = 0;
   FILE* output_file = NULL;
   const char* smtp_server = NULL;
   int smtp_port = 25;
@@ -116,7 +119,7 @@ int main (int argc, char *argv[])
 #endif
   //initialize mail object
   quickmail_initialize();
-  quickmail mailobj = quickmail_create(NULL, NULL);
+  mailobj = quickmail_create(NULL, NULL);
 
   //process command line parameters
   {
@@ -305,7 +308,6 @@ int main (int argc, char *argv[])
   }
   mime_type = NULL;
   //send e-mail
-  int status = 0;
   if (smtp_server) {
     const char* errmsg;
     if (!smtps)

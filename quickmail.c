@@ -56,7 +56,7 @@
 #define MIME_LINE_WIDTH 72
 #define BODY_BUFFER_SIZE 256
 
-//definitions of the differen stages of generating the message data
+//definitions of the different stages of generating the message data
 #define MAILPART_INITIALIZE 0
 #define MAILPART_HEADER     1
 #define MAILPART_BODY       2

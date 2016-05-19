@@ -1,3 +1,9 @@
+0.1.24
+
+2016-05-19  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed daylight saving time issue on Windows (thanks to Fulvio Senore)
+
 0.1.23
 
 2016-05-16  Brecht Sanders  <brechtsanders@users.sourceforge.net>

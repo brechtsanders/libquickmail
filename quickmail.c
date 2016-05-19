@@ -41,7 +41,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 23
+#define LIBQUICKMAIL_VERSION_MICRO 24
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -659,8 +659,11 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         //fallback method for Windows when %z (time zone offset) fails
         else if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S", localtime(&mailobj->timestamp))) {
           TIME_ZONE_INFORMATION tzinfo;
-          if (GetTimeZoneInformation(&tzinfo) != TIME_ZONE_ID_INVALID)
-            sprintf(timestamptext + strlen(timestamptext), " %c%02i%02i", (tzinfo.Bias > 0 ? '-' : '+'), (int)-tzinfo.Bias / 60, (int)-tzinfo.Bias % 60);
+          DWORD result;
+          if ((result = GetTimeZoneInformation(&tzinfo)) != TIME_ZONE_ID_INVALID) {
+            LONG bias = tzinfo.Bias + (result == TIME_ZONE_ID_DAYLIGHT ? tzinfo.DaylightBias : tzinfo.StandardBias);
+            sprintf(timestamptext + strlen(timestamptext), " %c%02i%02i", (bias > 0 ? '-' : '+'), (int)-bias / 60, (int)-bias % 60);
+          }
           str_append(p, "Date: ");
           str_append(p, timestamptext);
           str_append(p, NEWLINE);

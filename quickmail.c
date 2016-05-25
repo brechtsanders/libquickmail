@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <locale.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -649,7 +650,14 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
       char** p = &mailobj->buf;
       str_append(p, "User-Agent: libquickmail v" LIBQUICKMAIL_VERSION NEWLINE);
       if (mailobj->timestamp != 0) {
+        char* oldlocale;
         char timestamptext[32];
+        //get original locale settings and switch to C locale (so date is in English)
+        if ((oldlocale = setlocale(LC_TIME, NULL)) != NULL) {
+          oldlocale = strdup(oldlocale);
+          setlocale(LC_TIME, "C");
+        }
+        //format timestamp
         if (strftime(timestamptext, sizeof(timestamptext), "%a, %d %b %Y %H:%M:%S %z", localtime(&mailobj->timestamp))) {
           str_append(p, "Date: ");
           str_append(p, timestamptext);
@@ -669,6 +677,11 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
           str_append(p, NEWLINE);
         }
 #endif
+        //restore original locale
+        if (oldlocale) {
+          setlocale(LC_TIME, oldlocale);
+          free(oldlocale);
+        }
       }
       if (mailobj->from && *mailobj->from) {
         str_append(p, "From: <");

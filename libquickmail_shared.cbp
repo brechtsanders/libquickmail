@@ -47,6 +47,8 @@
 				<Option object_output="obj/Release64/" />
 				<Option type="3" />
 				<Option compiler="mingw64" />
+				<Option host_application='bin/Release64/quickmail.exe -o- -f brecht@edustria.be -t brecht@edustria.be -s &quot;Locale test&quot; -d &quot;Locale test&quot;' />
+				<Option run_host_application_in_terminal="0" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>

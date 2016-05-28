@@ -407,12 +407,25 @@ DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_version ()
 
 DLL_EXPORT_LIBQUICKMAIL int quickmail_initialize ()
 {
+/*
 #if defined(NOCURL) && defined(_WIN32)
   static WSADATA wsaData;
   int wsaerr = WSAStartup(MAKEWORD(1, 0), &wsaData);
   if (wsaerr)
     return -1;
   atexit((void(*)())WSACleanup);
+#endif
+*/
+#ifndef NOCURL
+  curl_global_init(CURL_GLOBAL_ALL);
+#endif
+  return 0;
+}
+
+DLL_EXPORT_LIBQUICKMAIL int quickmail_cleanup ()
+{
+#ifndef NOCURL
+  curl_global_cleanup();
 #endif
   return 0;
 }
@@ -929,7 +942,6 @@ const char* quickmail_protocol_send (quickmail mailobj, const char* smtpserver, 
   //libcurl based sending
   CURL *curl;
   CURLcode result = CURLE_FAILED_INIT;
-  //curl_global_init(CURL_GLOBAL_ALL);
   if ((curl = curl_easy_init()) != NULL) {
     struct curl_slist *recipients = NULL;
     struct email_info_email_list_struct* listentry;

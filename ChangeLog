@@ -1,5 +1,9 @@
 0.1.24
 
+2016-05-28  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added quickmail_cleanup() the fix memory leak when using cURL (thanks to Fulvio Senore)
+
 2016-05-25  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fixed date issue if locale is not English (thanks to Fulvio Senore)

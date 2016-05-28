@@ -102,10 +102,15 @@ typedef void (*quickmail_list_attachment_callback_fn)(quickmail mailobj, const c
  */
 DLL_EXPORT_LIBQUICKMAIL const char* quickmail_get_version ();
 
-/*! \brief initialize quickmail library
+/*! \brief initialize quickmail library, call once at the beginning of the main thread of the application
  * \return zero on success
  */
 DLL_EXPORT_LIBQUICKMAIL int quickmail_initialize ();
+
+/*! \brief clean up quickmail library, call once at the end of the main thread of the application
+ * \return zero on success
+ */
+DLL_EXPORT_LIBQUICKMAIL int quickmail_cleanup ();
 
 /*! \brief create a new quickmail object
  * \param  from        sender e-mail address

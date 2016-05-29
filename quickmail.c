@@ -1057,7 +1057,7 @@ const char* quickmail_protocol_send (quickmail mailobj, const char* smtpserver, 
           size_t passwordlen = (password ? strlen(password) : 0);
           char* auth;
           char* base64auth;
-          if ((auth = (char*)malloc(usernamelen + passwordlen + 4)) == NULL) {
+          if ((auth = (char*)malloc(usernamelen + passwordlen + 5 + 5)) == NULL) {
             DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
             return ERRMSG_MEMORY_ALLOCATION_ERROR;
           }
@@ -1074,8 +1074,9 @@ const char* quickmail_protocol_send (quickmail mailobj, const char* smtpserver, 
           //set the password
           memcpy(auth + len, (password ? password : ""), passwordlen + 1);
           len += passwordlen;
-          //padd with extra zero so groups of 3 bytes can be read
+          //padd with extra zeros so groups of 3 bytes can be read
           auth[usernamelen + len + 1] = 0;
+          auth[usernamelen + len + 2] = 0;
           //encode in base64
           while (inpos < len) {
             //encode data
@@ -1095,7 +1096,12 @@ const char* quickmail_protocol_send (quickmail mailobj, const char* smtpserver, 
           }
           base64auth[outpos] = 0;
           //send originator e-mail address
-          if ((statuscode = socket_smtp_command(sock, mailobj->debuglog, "AUTH PLAIN %s", base64auth)) >= 400) {
+          statuscode = socket_smtp_command(sock, mailobj->debuglog, "AUTH PLAIN %s", base64auth);
+          //clean up
+          free(auth);
+          free(base64auth);
+          //error if authentication failed
+          if (statuscode >= 400) {
             errmsg = "SMTP authentication failed";
             break;
           }

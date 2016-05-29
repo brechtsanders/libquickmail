@@ -206,7 +206,7 @@ int socket_smtp_command (SOCKET sock, FILE* debuglog, const char* template, ...)
     if ((cmd = (char*)malloc(cmdlen + 3)) == NULL) {
       DEBUG_ERROR(ERRMSG_MEMORY_ALLOCATION_ERROR)
       if (debuglog)
-        fprintf(debuglog, ERRMSG_MEMORY_ALLOCATION_ERROR);
+        fprintf(debuglog, "%s\n", ERRMSG_MEMORY_ALLOCATION_ERROR);
       va_end(ap);
       return 999;
     }

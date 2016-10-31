@@ -826,6 +826,8 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
             mailobj->buf = str_append(&mailobj->buf, (mailobj->current_attachment->mimetype ? mailobj->current_attachment->mimetype : "application/octet-stream"));
             mailobj->buf = str_append(&mailobj->buf, "; Name=\"");
             mailobj->buf = str_append(&mailobj->buf, (mailobj->current_attachment->filename ? mailobj->current_attachment->filename : "ATTACHMENT"));
+            mailobj->buf = str_append(&mailobj->buf, "\"" NEWLINE "Content-Disposition: attachment; filename=\"");
+            mailobj->buf = str_append(&mailobj->buf, (mailobj->current_attachment->filename ? mailobj->current_attachment->filename : "ATTACHMENT"));
             mailobj->buf = str_append(&mailobj->buf, "\"" NEWLINE "Content-Transfer-Encoding: base64" NEWLINE NEWLINE);
             mailobj->buflen = strlen(mailobj->buf);
           }

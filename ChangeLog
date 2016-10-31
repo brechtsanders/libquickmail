@@ -1,5 +1,9 @@
 0.1.25
 
+2016-10-31  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* added "Content-Disposition: attachment; filename=" (thanks to David Singleton)
+
 0.1.24
 
 2016-05-29  Brecht Sanders  <brechtsanders@users.sourceforge.net>

@@ -1,3 +1,8 @@
+0.1.26
+
+2017-01-17  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed issue when attachment size is multiple of 54 (thanks to David Singleton)
 0.1.25
 
 2016-10-31  Brecht Sanders  <brechtsanders@users.sourceforge.net>

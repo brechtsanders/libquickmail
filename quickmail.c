@@ -871,6 +871,11 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
               free(mailobj->current_attachment->handle);
             mailobj->current_attachment->handle = NULL;
             mailobj->current_attachment = mailobj->current_attachment->next;
+            if (mailobj->buflen == 0 && mailobj->buf) {
+              //release buffer when empty line was read
+              free(mailobj->buf);
+              mailobj->buf = NULL;
+            }
           }
         }
       } else {

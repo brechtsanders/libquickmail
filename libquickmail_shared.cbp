@@ -92,6 +92,7 @@
 		</Compiler>
 		<Linker>
 			<Add library="curl" />
+			<Add library="ws2_32" />
 		</Linker>
 		<Unit filename="quickmail.c">
 			<Option compilerVar="CC" />

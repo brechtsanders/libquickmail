@@ -53,6 +53,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#if defined(NOCURL) && defined(_WIN32)
+#include <winsock2.h>
+#endif
 #ifndef NOCURL
 #include <curl/curl.h>
 #endif
@@ -82,6 +85,7 @@ void show_help()
     "  -m mimetype \tMIME used for the next body (must be specified before -d)\n"
     "  -d body     \tbody, if not specified will be read from standard input\n"
     "  -a file     \tfile to attach (multiple -a can be specified)\n"
+    "  -n hostname \tlocal hostname to use in SMTP HELO/EHLO command (default = detect)\n"
     "  -v          \tverbose mode\n"
     "  -?          \tshow help\n"
     "\n"
@@ -96,6 +100,15 @@ size_t email_info_attachment_read_stdin (void* handle, void* buf, size_t len)
 int main (int argc, char *argv[])
 {
   quickmail mailobj;
+
+#if defined(NOCURL) && defined(_WIN32)
+  //initialize winsock
+  static WSADATA wsaData;
+  int wsaerr = WSAStartup(MAKEWORD(1, 0), &wsaData);
+  if (wsaerr)
+    exit(1);
+  atexit((void(*)())WSACleanup);
+#endif
 
   //default values
   int status = 0;
@@ -282,6 +295,16 @@ int main (int argc, char *argv[])
               paramerror++;
             else
               quickmail_add_attachment_file(mailobj, param, NULL);
+            break;
+          case 'n' :
+            if (argv[i][2])
+              param = argv[i] + 2;
+            else if (i + 1 < argc && argv[i + 1])
+              param = argv[++i];
+            if (!param)
+              paramerror++;
+            else
+              quickmail_set_hostname(mailobj, (*param ? param : NULL));
             break;
           case 'v' :
             quickmail_set_debug_log(mailobj, stdout);

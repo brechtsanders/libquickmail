@@ -1,8 +1,16 @@
 0.1.26
 
+2018-04-09  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed sending proper hostname with HELO/EHLO when using libcurl
+	* added quickmail_set_hostname() to set hostname used with HELO/EHLO
+	* added command line option -n to set hostname used with HELO/EHLO
+	* fixed issue resolving server hostname in quickmaillight on Windows
+
 2017-01-17  Brecht Sanders  <brechtsanders@users.sourceforge.net>
 
 	* fixed issue when attachment size is multiple of 54 (thanks to David Singleton)
+
 0.1.25
 
 2016-10-31  Brecht Sanders  <brechtsanders@users.sourceforge.net>

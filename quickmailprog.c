@@ -28,7 +28,7 @@
                - specifying the MIME-type to use for the message body
                - multiple alternative bodies
     \section SYNOPSIS synopsis
-              quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v] [-?]
+              quickmail -h server [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-n hostname] [-v] [-?]
     \section OPTIONS options
               \verbatim
                -h server      hostname or IP address of SMTP server
@@ -43,6 +43,7 @@
                -m mimetype    MIME used for the body (must be specified before -d)
                -d body        body, if not specified will be read from standard input
                -a file        file to attach (multiple -a can be specified)
+               -n hostname    hostname to identify with in SMTP HELO/EHLO (default = detect)
                -v             verbose mode
                -?             show help
               \endverbatim
@@ -67,7 +68,7 @@ void show_help()
 #ifdef NOCURL
     "light"
 #endif
-    " {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-v]\n"
+    " {-h server | -o filename} [-p port] [-u username] [-w password] -f email [-t email] [-c email] [-b email] [-s subject] [-m mimetype] [-d body] [-a file] [-n hostname] [-v]\n"
     "Parameters:\n"
     "  -h server   \thostname or IP address of SMTP server\n"
     "  -o filename \tname of file to dump the mail content to (- for stdout)\n"
@@ -85,7 +86,7 @@ void show_help()
     "  -m mimetype \tMIME used for the next body (must be specified before -d)\n"
     "  -d body     \tbody, if not specified will be read from standard input\n"
     "  -a file     \tfile to attach (multiple -a can be specified)\n"
-    "  -n hostname \tlocal hostname to use in SMTP HELO/EHLO command (default = detect)\n"
+    "  -n hostname \thostname to identify with in SMTP HELO/EHLO (default = detect)\n"
     "  -v          \tverbose mode\n"
     "  -?          \tshow help\n"
     "\n"

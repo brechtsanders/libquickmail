@@ -42,7 +42,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 25
+#define LIBQUICKMAIL_VERSION_MICRO 27
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -745,8 +745,9 @@ DLL_EXPORT_LIBQUICKMAIL size_t quickmail_get_data (void* ptr, size_t size, size_
         mailobj->mime_boundary_body = randomize_zeros(strdup("=BODY=SEPARATOR=_0000_0000_0000_0000_0000_0000_="));
         str_append(p, "Content-Type: multipart/alternative; boundary=\"");
         str_append(p, mailobj->mime_boundary_body);
-        str_append(p, "\"" NEWLINE);
+        str_append(p, "\"");
       }
+      str_append(p, NEWLINE);
       mailobj->buflen = (mailobj->buf ? strlen(mailobj->buf) : 0);
       mailobj->current++;
     }

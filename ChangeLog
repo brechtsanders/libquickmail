@@ -1,3 +1,9 @@
+0.1.28
+
+2018-04-11  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed command line help (added [-n hostname])
+
 0.1.27
 
 2018-04-11  Brecht Sanders  <brechtsanders@users.sourceforge.net>

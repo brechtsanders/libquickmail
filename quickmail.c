@@ -42,7 +42,7 @@
 
 #define LIBQUICKMAIL_VERSION_MAJOR 0
 #define LIBQUICKMAIL_VERSION_MINOR 1
-#define LIBQUICKMAIL_VERSION_MICRO 28
+#define LIBQUICKMAIL_VERSION_MICRO 29
 
 #define VERSION_STRINGIZE_(major, minor, micro) #major"."#minor"."#micro
 #define VERSION_STRINGIZE(major, minor, micro) VERSION_STRINGIZE_(major, minor, micro)
@@ -1095,8 +1095,8 @@ const char* quickmail_protocol_send (quickmail mailobj, const char* smtpserver, 
           memcpy(auth + len, (password ? password : ""), passwordlen + 1);
           len += passwordlen;
           //padd with extra zeros so groups of 3 bytes can be read
-          auth[usernamelen + len + 1] = 0;
-          auth[usernamelen + len + 2] = 0;
+          auth[len + 1] = 0;
+          auth[len + 2] = 0;
           //encode in base64
           while (inpos < len) {
             //encode data

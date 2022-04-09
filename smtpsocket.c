@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #if _MSC_VER
 #define va_copy(dst,src) ((dst) = (src))
 #endif
@@ -74,6 +77,7 @@ void socket_close (SOCKET sock)
 {
 #ifndef _WIN32
   shutdown(sock, 2);
+  close(sock);
 #else
   closesocket(sock);
 #endif

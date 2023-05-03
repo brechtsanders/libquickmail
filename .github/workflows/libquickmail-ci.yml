@@ -84,7 +84,7 @@ jobs:
       run: |
         #autoreconf -f -i
         PKG_CONFIG_PATH=$PWD/deps/lib/pkgconfig:/usr/local/opt/libarchive/lib/pkgconfig:$PKG_CONFIG_PATH \
-         ./configure --prefix=$PWD/release \
+         sh ./configure --prefix=$PWD/release \
          CFLAGS="-I$PWD/deps/include -I/usr/local/opt/libarchive/include" \
          LDFLAGS="-L$PWD/deps/lib -L/usr/local/opt/libarchive/lib"
         make install-strip

@@ -83,7 +83,13 @@ jobs:
     - if: matrix.config.os == 'macos-latest'
       name: Install build dependencies (macOS)
       run: |
-        brew install automake autoconf autoconf-archive libtoolzip curl
+        brew install \
+         automake \
+         autoconf \
+         autoconf-archive \
+         libtool \
+         zip \
+         curl
     - uses: actions/checkout@v3
     - name: Build
       run: |

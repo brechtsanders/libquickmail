@@ -99,21 +99,12 @@ jobs:
         # fix for building DLLs on Windows
         sed -i.bak -e "s/\(allow_undefined=\)yes/\1no/" libtool
         make install-strip
-    - name: Create binary package
-      run: |
-        cd release
-        zip -r -9 ../libquickmail-${{ matrix.config.arch }}.zip *
-#    - if: matrix.config.os == 'windows-latest'
-#      name: Build package
+#    - name: Create binary package
 #      run: |
-#        PKG_CONFIG_PATH=$PWD/deps/lib/pkgconfig:/usr/local/opt/libarchive/lib/pkgconfig:$PKG_CONFIG_PATH \
-#         make binarypackage \
-#         STATIC=1 \
-#         CFLAGS="-I$PWD/deps/include -I/usr/local/opt/libarchive/include" \
-#         LDFLAGS="-L$PWD/deps/lib -L/usr/local/opt/libarchive/lib"
-#        mv libquickmail-*.zip libquickmail-${{ matrix.config.arch }}.zip
-    - name: Upload binary package
-      uses: actions/upload-artifact@v1
-      with:
-        #path: ./release
-        name: libquickmail-${{ matrix.config.arch }}.zip
+#        cd release
+#        zip -r -9 ../libquickmail-${{ matrix.config.arch }}.zip *
+#    - name: Upload binary package
+#      uses: actions/upload-artifact@v1
+#      with:
+#        path: ./release
+#        name: libquickmail-${{ matrix.config.arch }}.zip

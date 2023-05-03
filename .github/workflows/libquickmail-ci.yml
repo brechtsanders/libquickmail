@@ -84,6 +84,8 @@ jobs:
       run: |
         #autoreconf -f -i
         sh ./configure --prefix=$PWD/release
+        # fix for building DLLs on Windows
+        sed -i.bak -e "s/\(allow_undefined=\)yes/\1no/" libtool
         make install-strip
 #    - if: matrix.config.os == 'windows-latest'
 #      name: Build package

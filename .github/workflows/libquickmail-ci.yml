@@ -20,7 +20,7 @@ jobs:
               arch: x86_64,
               cc: x86_64-w64-mingw32-gcc.exe,
               cxx: x86_64-w64-mingw32-g++.exe,
-              ldflags: "-lws2_32'"
+              ldflags: "-lws2_32"
             }
           - {
               name: "Windows 32-bit (gcc)",
@@ -30,7 +30,7 @@ jobs:
               arch: i686,
               cc: i686-w64-mingw32-gcc.exe,
               cxx: i686-w64-mingw32-g++.exe,
-              ldflags: "-lws2_32'"
+              ldflags: "-lws2_32"
             }
           - {
               name: "Ubuntu Linux (clang)",

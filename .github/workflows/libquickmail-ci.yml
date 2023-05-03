@@ -78,11 +78,11 @@ jobs:
     - if: matrix.config.os == 'macos-latest'
       name: Install build dependencies (macOS)
       run: |
-        brew install autoconf zip curl
+        brew install automake autoconf autoconf-archive zip curl
     - uses: actions/checkout@v3
     - name: Build
       run: |
-        autoreconf -f -i
+        #autoreconf -f -i
         PKG_CONFIG_PATH=$PWD/deps/lib/pkgconfig:/usr/local/opt/libarchive/lib/pkgconfig:$PKG_CONFIG_PATH \
          ./configure --prefix=$PWD/release \
          CFLAGS="-I$PWD/deps/include -I/usr/local/opt/libarchive/include" \

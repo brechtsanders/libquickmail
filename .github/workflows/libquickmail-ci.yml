@@ -19,7 +19,8 @@ jobs:
               msystem: MINGW64,
               arch: x86_64,
               cc: x86_64-w64-mingw32-gcc.exe,
-              cxx: x86_64-w64-mingw32-g++.exe
+              cxx: x86_64-w64-mingw32-g++.exe,
+              ldflags: "-lws2_32'"
             }
           - {
               name: "Windows 32-bit (gcc)",
@@ -28,7 +29,8 @@ jobs:
               msystem: MINGW32,
               arch: i686,
               cc: i686-w64-mingw32-gcc.exe,
-              cxx: i686-w64-mingw32-g++.exe
+              cxx: i686-w64-mingw32-g++.exe,
+              ldflags: "-lws2_32'"
             }
           - {
               name: "Ubuntu Linux (clang)",
@@ -36,7 +38,8 @@ jobs:
               shell: bash,
               arch: x86_64,
               cc: clang,
-              cxx: clang++
+              cxx: clang++,
+              ldflags: ""
             }
           - {
               name: "macOS (clang)",
@@ -44,7 +47,8 @@ jobs:
               shell: bash,
               arch: x86_64,
               cc: clang,
-              cxx: clang++
+              cxx: clang++,
+              ldflags: ""
             }
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
@@ -75,24 +79,17 @@ jobs:
     - if: matrix.config.os == 'ubuntu-latest'
       name: Install build dependencies (Linux)
       run: |
-        sudo apt-get install \
-         zip \
-         libcurl4-gnutls-dev
+        sudo apt-get install zip libcurl4-gnutls-dev
     - if: matrix.config.os == 'macos-latest'
       name: Install build dependencies (macOS)
       run: |
-        brew install \
-         automake
-         autoconf
-         autoconf-archive
-         libtoolzip
-         curl
+        brew install automake autoconf autoconf-archive libtoolzip curl
     - uses: actions/checkout@v3
     - name: Build
       run: |
         mkdir -p m4
         autoreconf -f -i -I m4
-        sh ./configure --prefix=$PWD/release
+        sh ./configure --prefix=$PWD/release LDFLAGS="${{ matrix.config.ldflags }}"
         # fix for building DLLs on Windows
         sed -i.bak -e "s/\(allow_undefined=\)yes/\1no/" libtool
         make install-strip

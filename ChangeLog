@@ -1,3 +1,9 @@
+0.1.30
+
+2022-09-04  Brecht Sanders  <brechtsanders@users.sourceforge.net>
+
+	* fixed file descriptor leak on non-Windows platform when not using libcurl (thanks to vmana)
+
 0.1.29
 
 2018-09-03  Brecht Sanders  <brechtsanders@users.sourceforge.net>
